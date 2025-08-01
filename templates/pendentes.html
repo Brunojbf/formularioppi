@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Propostas Pendentes - Aprovação de Containers{% endblock %}
+
+{% block content %}
+<h1>Propostas Pendentes</h1>
+
+<style>
+  /* Oculta a penúltima coluna */
+  table thead th:nth-last-child(2),
+  table tbody td:nth-last-child(2) {
+    display: none;
+  }
+</style>
+
+<div id="tabela">
+  {% include "tabela_registros.html" %}
+</div>
+{% endblock %}

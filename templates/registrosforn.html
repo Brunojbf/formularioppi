@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Registros do Fornecedor{% endblock %}
+
+{% block content %}
+<h1>Seus Registros</h1>
+
+<!-- Tabela com os registros filtrados por DUNS da sessão -->
+<div id="tabela">
+  {% include "tabela_registrosforn.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Downloads de PDFs{% endblock %}
+
+{% block content %}
+<h2>Arquivos para Download</h2>
+
+<style>
+  .gallery {
+    display: flex;
+    gap: 20px; /* espaçamento entre os cartões */
+    justify-content: center; /* centraliza horizontalmente */
+    flex-wrap: wrap; /* quebra a linha se não couber na tela */
+    margin-top: 20px;
+  }
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    width: 180px;
+    padding: 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card img {
+    width: 60px;
+    margin: 0 auto 10px auto;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 1em;
+    margin-bottom: 15px;
+    min-height: 40px;
+    color: #333;
+  }
+  .btn-download {
+    background-color: #2980b9;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+  .btn-download:hover {
+    background-color: #1f6391;
+  }
+  @media(max-width: 600px) {
+    .gallery {
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="gallery">
+  <div class="card">
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
+      <img src="{{ url_for('static', filename='PDFicon.png') }}" alt="PDF Icon" style="width:40px;" />
+    </div>
+    <div class="card-title">Etiqueta</div>
+    <a href="{{ url_for('static', filename='pdfs/Etiqueta.pdf') }}" class="btn-download" download>Download</a>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
+      <img src="{{ url_for('static', filename='PDFicon.png') }}" alt="PDF Icon" style="width:40px;" />
+    </div>
+    <div class="card-title">Manual Local</div>
+    <a href="{{ url_for('static', filename='pdfs/Manual_Local.pdf') }}" class="btn-download" download>Download</a>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
+      <img src="{{ url_for('static', filename='PDFicon.png') }}" alt="PDF Icon" style="width:40px;" />
+    </div>
+    <div class="card-title">Manual Global</div>
+    <a href="{{ url_for('static', filename='pdfs/Manual_Global.pdf') }}" class="btn-download" download>Download</a>
+  </div>
+</div>
+
+{% endblock %}

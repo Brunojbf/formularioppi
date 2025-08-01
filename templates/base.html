@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Meu App{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  
+  <style>
+    /* Estilo para fixar o widget na parte inferior da sidebar */
+    .sidebar {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding-bottom: 80px; /* espaço para o widget */
+    }
+
+    #google_translate_element {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      text-align: center;
+      z-index: 10;
+      font-size: 14px;
+    }
+
+    #google_translate_element select {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 180px;
+    }
+
+    #google_translate_element select:hover {
+      background: #555;
+    }
+  </style>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+</head>
+<body>
+  <div class="app-container">
+    <nav class="sidebar" aria-label="Menu principal">
+      <div class="menu-header">
+        <a href="{{ url_for('home') }}">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logosidebar" />
+        </a>
+        <h2 class="menu-title">PMS Menu</h2>
+      </div>
+
+      <!-- BLOCO 1 - FORNECEDOR (exibe só se usuário interno NÃO estiver logado) -->
+      {% if not session.get('user') %}
+      <section class="menu-block-container" aria-labelledby="bloco1-title">
+        <div class="menu-block">
+          <h3 id="bloco1-title" class="menu-block-title">FORNECEDOR</h3>
+          <ul>
+            <li class="{% if request.endpoint == 'form' %}active{% endif %}">
+              <a href="{{ url_for('form') }}">Formulário PPI</a>
+            </li>
+
+            <li class="{% if request.endpoint == 'download' %}active{% endif %}">
+              <a href="{{ url_for('download') }}">Download Manuais</a>
+            </li>
+
+            {% if session.get('duns') and session.get('token') %}
+              <!-- Fornecedor logado -->
+              <li class="{% if request.endpoint == 'registrosforn' %}active{% endif %}">
+                <a href="{{ url_for('registrosforn') }}">Controle de Cadastro</a>
+              </li>
+              <li>
+                <a href="{{ url_for('logout_forn') }}" style="color: red;">Sair (Fornecedor)</a>
+              </li>
+            {% else %}
+              <!-- Fornecedor não logado -->
+              <li class="{% if request.endpoint == 'loginforn' %}active{% endif %}">
+                <a href="{{ url_for('loginforn') }}">Log In</a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- BLOCO 2 - USUÁRIO INTERNO (só aparece se fornecedor NÃO estiver logado) -->
+      {% if not (session.get('duns') and session.get('token')) %}
+      <section class="menu-block-container" aria-labelledby="bloco2-title">
+        <div class="menu-block">
+          <h3 id="bloco2-title" class="menu-block-title">GM</h3>
+
+          {% if not session.get('user') %}
+            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+              <div>
+                <label for="usuario">Usuário:</label>
+                <input type="text" id="usuario" name="usuario" required autocomplete="username" class="input-field" />
+              </div>
+              <div>
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required autocomplete="current-password" class="input-field" />
+              </div>
+              <button type="submit" name="submituser">Enter</button>
+            </form>
+
+            {% if session.get('login_error') %}
+              <p class="error-msg" style="color:red;">{{ session.get('login_error') }}</p>
+            {% endif %}
+          {% else %}
+            <ul>
+              <li class="{% if request.endpoint == 'pendentes' %}active{% endif %}">
+                <a href="{{ url_for('pendentes') }}">Aprovações</a>
+              </li>
+              <li class="{% if request.endpoint == 'registros' %}active{% endif %}">
+                <a href="{{ url_for('registros') }}">Controle de Cadastros</a>
+              </li>
+              <li class="{% if request.endpoint == 'fornecedores' %}active{% endif %}">
+                <a href="{{ url_for('fornecedores') }}">Fornecedores</a>
+              </li>
+              <li class="{% if request.endpoint == 'solicitacoes_em_aberto' %}active{% endif %}">
+                <a href="{{ url_for('solicitacoes_em_aberto') }}">Solicitações</a>
+              </li>
+              <li>
+                <a href="{{ url_for('logout') }}" style="color: red;">Log Out ({{ session['user'] }})</a>
+              </li>
+            </ul>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Google Translate Widget -->
+      <div id="google_translate_element"></div>
+    </nav>
+
+    <main class="main-content" role="main" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        {
+          pageLanguage: 'pt',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        },
+        'google_translate_element'
+      );
+    }
+  </script>
+
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // Flash messages fadeout
+    document.addEventListener("DOMContentLoaded", function() {
+      const flashMessages = document.querySelectorAll('.flash');
+
+      flashMessages.forEach(function(msg) {
+        setTimeout(() => {
+          msg.style.opacity = '0'; // esmaece
+          setTimeout(() => msg.remove(), 500); // remove depois da transição
+        }, 40000); // 4 segundos
+      });
+    });
+  </script>
+
+</body>
+</html>

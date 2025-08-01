@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Plataforma PMS{% endblock %}
+
+{% block content %}
+<div class="welcome-block">
+  <div class="welcome-text">
+    <h1>Bem-vindo ao sistema PMS!</h1>
+  </div>
+
+  <div class="welcome-top">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="welcome-logo" />
+    <div class="pms-vertical">
+      <span>Packaging</span>
+      <span>Management</span>
+      <span>System</span>
+    </div>
+  </div>
+
+  <p class="welcome-description">
+    A plataforma PMS é uma solução digital integrada para gerenciamento e controle dos processos de embalagem, facilitando a colaboração e o acompanhamento em tempo real.
+  </p>
+</div>
+
+<style>
+  .home-box {
+    padding: 20px;
+  }
+
+  .button-columns {
+    display: flex;
+    gap: 40px;
+  }
+
+  .button-column {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .btn-link {
+    background-color: white;
+    color: black;
+    text-decoration: none;
+    text-align: center;
+    padding: 20px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 120px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .btn-link:hover {
+    background-color: #007BFF;
+    color: white;
+  }
+
+  .btn-link i {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+
+  .btn-description {
+    flex: 1;
+    font-size: 20px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+  }
+</style>
+
+<div class="home-box">
+  <h3>Fornecedor, comece por aqui:</h3>
+
+  <div class="button-columns">
+
+    <div class="button-column">
+      <a href="{{ url_for('form') }}" class="btn-link">
+        <i class="fa-solid fa-file-lines"></i>
+        PPI Form
+      </a>
+      <div class="btn-description">
+        Preencha o formulário para enviar suas informações de embalagem.
+      </div>
+    </div>
+
+    <div class="button-column">
+      <a href="{{ url_for('loginforn') }}" class="btn-link" onclick="solicitarDunsEToken(event)">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Register Control
+      </a>
+      <div class="btn-description">
+        Consulte o controle de registros utilizando seu número DUNS.
+      </div>
+    </div>
+
+    <div class="button-column">
+      <a href="{{ url_for('download') }}" class="btn-link">
+        <i class="fa-solid fa-download"></i>
+        Packaging Manuals
+      </a>
+      <div class="btn-description">
+        Baixe manuais e documentos importantes para conhecimento dos processos.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="home-box">
+  <h3>Suporte & Contato</h3>
+  <p>Para dúvidas ou problemas técnicos, contate o suporte no e-mail <a href="mailto:grp-breng.containerization.gmb@gm.com">grp-breng.containerization.gmb@gm.com</a>.</p>
+</div>
+
+<!-- ✅ MODAL para DUNS + Token -->
+<div id="modal-duns-token" style="display: none; position: fixed; z-index: 999; background-color: rgba(0,0,0,0.5); top: 0; left: 0; width: 100%; height: 100%;">
+  <div style="background: #000000; padding: 20px; max-width: 400px; margin: 100px auto; border-radius: 10px;">
+    <h2>Acesso ao Registro</h2>
+    <label for="modal-duns">DUNS:</label>
+    <input type="text" id="modal-duns" class="form-control" /><br />
+    <label for="modal-token">Token:</label>
+    <input type="text" id="modal-token" class="form-control" /><br />
+    <button onclick="acessarRegistros()">Acessar</button>
+  </div>
+</div>
+
+<script>
+  function solicitarDuns(event) {
+    event.preventDefault();
+    document.getElementById("modal-duns-token").style.display = "block";
+  }
+
+  function acessarRegistros() {
+    const duns = document.getElementById("modal-duns").value.trim();
+    const token = document.getElementById("modal-token").value.trim();
+
+    if (!duns || !token) {
+      alert("Por favor, preencha o DUNS e o Token.");
+      return;
+    }
+
+    window.location.href = `/registrosforn?duns=${encodeURIComponent(duns)}&token=${encodeURIComponent(token)}`;
+  }
+</script>
+{% endblock %}

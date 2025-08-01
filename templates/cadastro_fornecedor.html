@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Fornecedor{% endblock %}
+
+{% block content %}
+<div class="container centered">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logo" />
+  <h1>Cadastro de Fornecedor</h1>
+
+  <form action="{{ url_for('cadastro_fornecedor') }}" method="post">
+    <fieldset>
+      <legend>Informações do Fornecedor</legend>
+
+      <label for="nome">Nome do Fornecedor:</label>
+      <input type="text" id="nome" name="nome" required />
+
+      <label for="endereco">Endereço:</label>
+      <input type="text" id="endereco" name="endereco" required />
+
+      <label for="cidade">Cidade:</label>
+      <input type="text" id="cidade" name="cidade" required />
+
+      <label for="pais">País:</label>
+      <input type="text" id="pais" name="pais" required />
+
+      <label for="duns">DUNS:</label>
+      <input type="text" id="duns" name="duns" pattern="\d{1,9}" title="Apenas números, até 9 dígitos" required />
+
+      <label for="pais">E-mail:</label>
+      <input type="text" id="emailforn" name="emailforn" required />
+
+      <label for="token">Token de Login:</label>
+      <input type="text" id="token" name="token" value="{{ token }}" readonly />
+
+    </fieldset>
+
+    <button type="submit" name="submitform">Cadastrar</button>
+  </form>
+</div>
+{% endblock %}

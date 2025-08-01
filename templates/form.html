@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Packaging Proposal Information (PPI){% endblock %}
+
+{% block content %}
+<div class="container centered">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logo" />
+  <h1>Packaging Proposal Information (PPI)</h1>
+
+
+
+  <form action="{{ url_for('form') }}" method="post" enctype="multipart/form-data">
+    <!-- Bloco 1 -->
+    <fieldset>
+      <legend>Informações Técnicas</legend>
+
+      <label for="pn">PN:</label>
+      <input type="text" id="pn" name="pn" pattern="(\d{8})(,\s*\d{8})*" title="Digite números de 8 dígitos, separados por vírgula" required />
+
+      <label for="descricao">Descrição da Peça:</label>
+      <input type="text" id="descricao" name="descricao" required />
+
+      <label for="plataforma">Plataforma:</label>
+      <select id="plataforma" name="plataforma" required>
+        <option value="">Selecione</option>
+        <option value="GEM">GEM</option>
+        <option value="GMI700">GMI700</option>
+        <option value="GSV">GSV</option>
+      </select>
+
+      <label for="carro">Carro:</label>
+      <select id="carro" name="carro" required disabled>
+        <option value="">Selecione a Plataforma Primeiro</option>
+      </select>
+
+      <label for="planta">Planta:</label>
+      <select id="planta" name="planta" required>
+        <option value="">Selecione</option>
+        <option value="Planta1">Planta1</option>
+        <option value="Planta2">Planta2</option>
+        <option value="Planta3">Planta3</option>
+      </select>
+
+      <label for="codigo">Código da Planta:</label>
+      <select id="codigo" name="codigo" required disabled>
+        <option value="">Selecione a Planta Primeiro</option>
+      </select>
+    </fieldset>
+
+    <!-- Bloco 2 -->
+    <fieldset>
+      <legend>Informações do Fornecedor</legend>
+
+      <label for="fornecedor">Fornecedor:</label>
+      <input type="text" id="fornecedor" name="fornecedor" required />
+
+      <label for="endereco">Endereço:</label>
+      <input type="text" id="endereco" name="endereco" required />
+
+      <label for="cidade">Cidade:</label>
+      <input type="text" id="cidade" name="cidade" required />
+
+      <label for="duns">DUNS:</label>
+      <input type="text" id="duns" name="duns" pattern="\d{1,9}" title="Only numbers, up to 9 digits" required />
+
+      <label for="responsavel">Responsável:</label>
+      <input type="text" id="responsavel" name="responsavel" required />
+
+      <label for="email">E-mail do Responsável:</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="celular">Telefone (com DDD):</label>
+      <input type="tel" id="celular" name="celular" pattern="\d{10,11}" title="Only numbers" required />
+    </fieldset>
+
+    <!-- Bloco 3 -->
+    <fieldset>
+      <legend>Imagem da Proposta</legend>
+
+      <label for="imagem">Seleciona uma Imagem:</label>
+      <input type="file" id="imagem" name="imagem" accept="image/*" />
+
+      <!-- Preview da imagem -->
+      <div id="preview-container" style="margin-top: 10px;">
+        <img id="preview" src="#" alt="Pré-visualização" style="display:none; max-width: 200px; border: 1px solid #ccc; padding: 5px; border-radius: 5px;" />
+      </div>
+    </fieldset>
+
+
+    <!-- Bloco 4 - Aprovação -->
+    <fieldset>
+      <legend>Aprovação</legend>
+
+      <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+          <label for="rep_fornecedor">Representante do Fornecedor:</label>
+          <input type="text" id="rep_fornecedor" name="rep_fornecedor" />
+        </div>
+        <div style="flex: 1;">
+          <label for="aprov_fornecedor">Aprovação:</label>
+          <select id="aprov_fornecedor" name="aprov_fornecedor">
+            <option value="" selected disabled>Selecione</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="reprovado">Reprovado</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: none;">
+        <div style="flex: 1;">
+          <label for="rep_containers"><strong>Representante de Containers:</strong></label>
+          <input type="text" id="rep_containers" name="rep_containers" />
+        </div>
+        <div style="flex: 1;">
+          <label for="aprov_containers"><strong>Aprovação:</strong></label>
+          <select id="aprov_containers" name="aprov_containers">
+            <option value="aguardando aprovacao" selected>Aguardando Aprovação</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="reprovado">Reprovado</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <input type="hidden" name="acao" value="novo_cadastro">
+    <button type="submit">Submeter</button>
+
+  </form>
+</div>
+
+<script>
+const inputImagem = document.getElementById('imagem');
+const previewImg = document.getElementById('preview');
+
+inputImagem.addEventListener('change', function () {
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+
+    reader.addEventListener('load', function () {
+      previewImg.setAttribute('src', this.result);
+      previewImg.style.display = 'block';
+    });
+
+    reader.readAsDataURL(file);
+  } else {
+    previewImg.style.display = 'none';
+  }
+});
+
+
+  const plataformaSelect = document.getElementById('plataforma');
+  const carroSelect = document.getElementById('carro');
+  const plantaSelect = document.getElementById('planta');
+  const codigoSelect = document.getElementById('codigo');
+
+  const carrosPorPlataforma = {
+    GEM: ['Carro1', 'Carro2', 'Carro3'],
+    GMI700: ['Carro4', 'Carro5'],
+    GSV: ['Carro6']
+  };
+
+  const codigosPorPlanta = {
+    Planta1: ['P1', 'P2', 'P3'],
+    Planta2: ['P4', 'P5', 'P6'],
+    Planta3: ['P7', 'P8', 'P9']
+  };
+
+  plataformaSelect.addEventListener('change', () => {
+    const plataforma = plataformaSelect.value;
+    carroSelect.innerHTML = '<option value="">Selecione o Carro</option>';
+    if (plataforma && carrosPorPlataforma[plataforma]) {
+      carroSelect.disabled = false;
+      carrosPorPlataforma[plataforma].forEach(carro => {
+        const option = document.createElement('option');
+        option.value = carro;
+        option.textContent = carro;
+        carroSelect.appendChild(option);
+      });
+    } else {
+      carroSelect.disabled = true;
+    }
+  });
+
+  plantaSelect.addEventListener('change', () => {
+    const planta = plantaSelect.value;
+    codigoSelect.innerHTML = '<option value="">Selecione o Código</option>';
+    if (planta && codigosPorPlanta[planta]) {
+      codigoSelect.disabled = false;
+      codigosPorPlanta[planta].forEach(codigo => {
+        const option = document.createElement('option');
+        option.value = codigo;
+        option.textContent = codigo;
+        codigoSelect.appendChild(option);
+      });
+    } else {
+      codigoSelect.disabled = true;
+    }
+  });
+</script>
+{% endblock %}

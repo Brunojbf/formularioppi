@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registros de Fornecedores</title>
+
+  <!-- CSS DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa; /* Um cinza claro para a página */
+      margin: 0;
+      padding: 0;
+    }
+
+    table#registrosForn {
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    thead tr:first-child th {
+      background-color: #2c3e50;
+      color: white;
+      font-weight: 600;
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 2px solid #34495e;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    thead tr:nth-child(2) th {
+      background-color: #000000;
+      padding: 8px 10px;
+    }
+
+    thead input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #000000;
+      border-radius: 5px;
+      font-size: 0.9em;
+    }
+
+    thead input:focus {
+      outline: none;
+      border-color: #2980b9;
+      box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+    }
+
+    tbody tr {
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    tbody tr:hover {
+      background-color: #d6eaff;
+    }
+
+    tbody td {
+      padding: 12px 15px;
+      color: #333;
+    }
+
+    tbody td a {
+      color: #2980b9;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    tbody td a:hover {
+      text-decoration: underline;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+      background-color: #2980b9;
+      border: none;
+      color: black !important;
+      border-radius: 4px;
+      padding: 6px 12px;
+      margin: 0 3px;
+      cursor: pointer;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+      background-color: #1f6391;
+      color: black !important;
+    }
+
+    .dataTables_wrapper .dataTables_length select,
+    .dataTables_wrapper .dataTables_filter input {
+      border-radius: 5px;
+      border: 1px solid #000000;
+      padding: 5px 8px;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+      table#registrosForn, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead tr:first-child,
+      thead tr:nth-child(2) {
+        display: none;
+      }
+
+      tbody tr {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #000000;
+      }
+
+      tbody td {
+        padding: 8px 10px;
+        text-align: right;
+        position: relative;
+      }
+
+      tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        font-weight: 600;
+        color: #ccc;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<table id="registrosForn" class="display">
+  <thead>
+    <tr>
+      <th>PN</th>
+      <th>Description</th>
+      <th>Plataforma</th>
+      <th>Carro</th>
+      <th>Planta</th>
+      <th>Código</th>
+      <th>Aprovação</th>
+      <th>Ação</th>
+    </tr>
+    <tr>
+      <th><input type="text" placeholder="Filtrar PN" /></th>
+      <th><input type="text" placeholder="Filtrar Descrição" /></th>
+      <th><input type="text" placeholder="Filtrar Plataforma" /></th>
+      <th><input type="text" placeholder="Filtrar Carro" /></th>
+      <th><input type="text" placeholder="Filtrar Planta" /></th>
+      <th><input type="text" placeholder="Filtrar Código" /></th>
+      <th><input type="text" placeholder="Filtrar Ação" /></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for registro in registros %}
+    <tr>
+      <td data-label="PN">{{ registro.pn }}</td>
+      <td data-label="Descrição">{{ registro.descricao }}</td>
+      <td data-label="Plataforma">{{ registro.plataforma }}</td>
+      <td data-label="Carro">{{ registro.carro }}</td>
+      <td data-label="Planta">{{ registro.planta }}</td>
+      <td data-label="Código">{{ registro.codigo }}</td>
+      <td data-label="Aprovação"
+          class="{% if registro.aprov_containers == 'aprovado' %}aprovado
+                {% elif registro.aprov_containers == 'reprovado' %}reprovado
+                {% elif registro.aprov_containers == 'aguardando aprovacao' %}aguardando
+                {% elif registro.aprov_containers == 'aguardando proposta' %}aguardando_proposta
+                {% endif %}">
+        {{ registro.aprov_containers }}
+      </td>
+        <td data-label="Ação">
+          {% if registro.aprov_containers == 'aguardando proposta' %}
+            <a href="{{ url_for('editar_formulario_forn', registro_id=registro.id) }}">Preencher Proposta</a>
+          {% elif registro.aprov_containers == 'aguardando aprovacao' %}
+            <span style="color: #999; font-style: italic;">Aguardando aprovação</span>
+          {% else %}
+            <a href="{{ url_for('gerar_pdf', registro_id=registro.id) }}" target="_blank">Gerar PDF</a>
+          {% endif %}
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;">Nenhum registro encontrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- jQuery e DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    var table = $('#registrosForn').DataTable({
+      language: {
+        url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/Portuguese-Brasil.json"
+      },
+      pageLength: 10,
+      lengthMenu: [5, 10, 25, 50],
+      order: [[0, "asc"]],
+      columnDefs: [
+        { orderable: false, targets: 6 }
+      ],
+      fixedHeader: true
+    });
+
+    // Filtros por coluna
+    $('#registrosForn thead tr:eq(1) th').each(function(i) {
+      $('input', this).on('keyup change clear', function() {
+        if (table.column(i).search() !== this.value) {
+          table
+            .column(i)
+            .search(this.value)
+            .draw();
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

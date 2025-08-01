@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Packaging Proposal Information (PPI){% endblock %}
+
+{% block content %}
+<div class="container centered">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logo" />
+  <h1>Packaging Proposal Information (PPI)</h1>
+
+  <form action="{{ url_for('editar_formulario', registro_id=registro.id) }}" method="post" enctype="multipart/form-data">
+    <!-- Bloco 1 -->
+    <fieldset>
+      <legend>Informações Técnicas</legend>
+
+      <label for="pn">PN:</label>
+      <input type="text" id="pn" name="pn" pattern="(\d{8})(,\s*\d{8})*" title="Digite números de 8 dígitos, separados por vírgula" required
+             value="{{ registro.pn }}" />
+
+      <label for="descricao">Descrição da Peça:</label>
+      <input type="text" id="descricao" name="descricao" required value="{{ registro.descricao }}" />
+
+      <label for="plataforma">Plataforma:</label>
+      <select id="plataforma" name="plataforma" required>
+        <option value="">Selecione</option>
+        <option value="GEM" {% if registro.plataforma == "GEM" %}selected{% endif %}>GEM</option>
+        <option value="GMI700" {% if registro.plataforma == "GMI700" %}selected{% endif %}>GMI700</option>
+        <option value="GSV" {% if registro.plataforma == "GSV" %}selected{% endif %}>GSV</option>
+      </select>
+
+      <label for="carro">Carro:</label>
+      <select id="carro" name="carro" required>
+        <option value="">Selecione a Plataforma Primeiro</option>
+      </select>
+
+      <label for="planta">Planta:</label>
+      <select id="planta" name="planta" required>
+        <option value="">Selecione</option>
+        <option value="Planta1" {% if registro.planta == "Planta1" %}selected{% endif %}>Planta1</option>
+        <option value="Planta2" {% if registro.planta == "Planta2" %}selected{% endif %}>Planta2</option>
+        <option value="Planta3" {% if registro.planta == "Planta3" %}selected{% endif %}>Planta3</option>
+      </select>
+
+      <label for="codigo">Código da Planta:</label>
+      <select id="codigo" name="codigo" required>
+        <option value="">Selecione a Planta Primeiro</option>
+      </select>
+    </fieldset>
+
+    <!-- Bloco 2 -->
+    <fieldset>
+      <legend>Informações do Fornecedor</legend>
+
+      <label for="fornecedor">Fornecedor:</label>
+      <input type="text" id="fornecedor" name="fornecedor" required value="{{ registro.fornecedor }}" />
+
+      <label for="endereco">Endereço:</label>
+      <input type="text" id="endereco" name="endereco" required value="{{ registro.endereco }}" />
+
+      <label for="cidade">Cidade:</label>
+      <input type="text" id="cidade" name="cidade" required value="{{ registro.cidade }}" />
+
+      <label for="duns">DUNS:</label>
+      <input type="text" id="duns" name="duns" pattern="\d{1,9}" title="Only numbers, up to 9 digits" required value="{{ registro.duns }}" />
+
+      <label for="responsavel">Responsável:</label>
+      <input type="text" id="responsavel" name="responsavel" required value="{{ registro.responsavel }}" />
+
+      <label for="email">E-mail do Responsável:</label>
+      <input type="email" id="email" name="email" required value="{{ registro.email }}" />
+
+      <label for="celular">Telefone (com DDD):</label>
+      <input type="tel" id="celular" name="celular" pattern="\d{10,11}" title="Only numbers" required value="{{ registro.celular }}" />
+    </fieldset>
+
+<!-- Bloco 3 -->
+<fieldset>
+  <legend>Imagem da Proposta</legend>
+
+  <!-- Miniatura da imagem já salva no banco (caso exista) -->
+  {% if registro.imagem_url %}
+  <div style="margin-bottom: 10px;">
+    <img src="{{ registro.imagem_url }}" alt="Imagem da Proposta" style="max-width: 200px; max-height: 150px; display:block;" />
+  </div>
+  {% endif %}
+
+  <!-- Pré-visualização da nova imagem selecionada -->
+  <div id="preview" style="margin-bottom: 10px;"></div>
+
+  <label for="imagem">Seleciona uma Imagem (opcional):</label>
+  <input type="file" id="imagem" name="imagem" accept="image/*" onchange="mostrarPreview(event)" />
+</fieldset>
+
+<!-- Bloco 4 - Aprovação -->
+<fieldset>
+  <legend>Aprovação</legend>
+
+  <div style="display: flex; gap: 20px;">
+    <div style="flex: 1;">
+      <label for="rep_fornecedor"><strong>Representante do Fornecedor:</strong></label>
+      <input type="text" id="rep_fornecedor" name="rep_fornecedor" value="{{ registro.rep_fornecedor }}" />
+    </div>
+    <div style="flex: 1;">
+      <label for="aprov_fornecedor"><strong>Aprovação:</strong></label>
+      <select id="aprov_fornecedor" name="aprov_fornecedor">
+        <option value="" disabled {% if not registro.aprov_fornecedor %}selected{% endif %}>Selecione</option>
+        <option value="aprovado" {% if registro.aprov_fornecedor == "aprovado" %}selected{% endif %}>Aprovado</option>
+        <option value="reprovado" {% if registro.aprov_fornecedor == "reprovado" %}selected{% endif %}>Reprovado</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; margin-top: 15px;">
+    <div style="flex: 1;">
+      <label for="rep_containers"><strong>Responsável Containers:</strong></label>
+      <input type="text" id="rep_containers" name="rep_containers" value="{{ registro.rep_containers }}" />
+    </div>
+    <div style="flex: 1;">
+      <label for="aprov_containers"><strong>Aprovação Container:</strong></label>
+      <select id="aprov_containers" name="aprov_containers">
+        <option value="" disabled {% if not registro.aprov_containers %}selected{% endif %}>Selecione</option>
+        <option value="aguardando aprovacao" {% if registro.aprov_containers == "aguardando aprovacao" %}selected{% endif %}>Aguardando Aprovação</option>
+        <option value="aprovado" {% if registro.aprov_containers == "aprovado" %}selected{% endif %}>Aprovado</option>
+        <option value="reprovado" {% if registro.aprov_containers == "reprovado" %}selected{% endif %}>Reprovado</option>
+      </select>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Atualizar MGO</legend>
+  <label for="notificar_tabela">
+    <input type="checkbox" id="notificar_tabela" name="notificar_tabela" value="sim">
+    Enviar e-mail solicitando atualização de cadastro no MGO
+  </label>
+</fieldset>
+
+    <button type="submit" name="submitform">Atualizar</button>
+  </form>
+</div>
+
+<script>
+
+    function mostrarPreview(event) {
+    const input = event.target;
+    const previewDiv = document.getElementById("preview");
+    previewDiv.innerHTML = ""; // limpa previews anteriores
+
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.maxWidth = "200px";
+        img.style.maxHeight = "150px";
+        img.style.display = "block";
+        previewDiv.appendChild(img);
+      };
+
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+  const plataformaSelect = document.getElementById('plataforma');
+  const carroSelect = document.getElementById('carro');
+  const plantaSelect = document.getElementById('planta');
+  const codigoSelect = document.getElementById('codigo');
+
+  const carrosPorPlataforma = {
+    GEM: ['Carro1', 'Carro2', 'Carro3'],
+    GMI700: ['Carro4', 'Carro5'],
+    GSV: ['Carro6']
+  };
+
+  const codigosPorPlanta = {
+    Planta1: ['P1', 'P2', 'P3'],
+    Planta2: ['P4', 'P5', 'P6'],
+    Planta3: ['P7', 'P8', 'P9']
+  };
+
+  function preencherSelect(selectElem, options, selecionado) {
+    selectElem.innerHTML = '';
+    const optionPadrao = document.createElement('option');
+    optionPadrao.value = '';
+    optionPadrao.textContent = selectElem === carroSelect ? 'Selecione o Carro' : 'Selecione o Código';
+    selectElem.appendChild(optionPadrao);
+
+    options.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt;
+      option.textContent = opt;
+      if(opt === selecionado) option.selected = true;
+      selectElem.appendChild(option);
+    });
+    selectElem.disabled = false;
+  }
+
+  plataformaSelect.addEventListener('change', () => {
+    const plataforma = plataformaSelect.value;
+    if(plataforma && carrosPorPlataforma[plataforma]){
+      preencherSelect(carroSelect, carrosPorPlataforma[plataforma], registro.carro);
+    } else {
+      carroSelect.innerHTML = '<option value="">Selecione a Plataforma Primeiro</option>';
+      carroSelect.disabled = true;
+    }
+  });
+
+  plantaSelect.addEventListener('change', () => {
+    const planta = plantaSelect.value;
+    if(planta && codigosPorPlanta[planta]){
+      preencherSelect(codigoSelect, codigosPorPlanta[planta], registro.codigo);
+    } else {
+      codigoSelect.innerHTML = '<option value="">Selecione a Planta Primeiro</option>';
+      codigoSelect.disabled = true;
+    }
+  });
+
+  // Ao carregar a página, dispara os eventos para preencher os selects dependentes com os dados existentes
+  document.addEventListener('DOMContentLoaded', () => {
+    if (plataformaSelect.value) {
+      preencherSelect(carroSelect, carrosPorPlataforma[plataformaSelect.value], "{{ registro.carro }}");
+    }
+    if (plantaSelect.value) {
+      preencherSelect(codigoSelect, codigosPorPlanta[plantaSelect.value], "{{ registro.codigo }}");
+    }
+  });
+
+  // Objeto registro para JS (valores iniciais)
+  const registro = {
+    carro: "{{ registro.carro }}",
+    codigo: "{{ registro.codigo }}"
+  };
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Packaging Proposal Information (PPI)</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+
+    body {
+      font-family: "Arial", sans-serif;
+      color: #333;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .logo {
+      width: 160px;
+    }
+
+    .bloco {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+      background-color: #f9f9f9;
+      width: 100%;
+      box-sizing: border-box;
+      page-break-inside: avoid;
+    }
+
+    .bloco h2 {
+      margin-top: 0;
+      font-size: 16px;
+      background-color: #eaeaea;
+      padding: 10px;
+      border-radius: 5px;
+      color: #34495e;
+      border-left: 5px solid #2980b9;
+    }
+
+    .campo {
+      margin-bottom: 8px;
+      display: flex;
+    }
+
+    .campo strong {
+      width: 180px;
+      color: #2c3e50;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .imagem-container {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .imagem-container img {
+      max-width: 100%;
+      max-height: 400px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="titulo-container">
+      <h1>Packaging Proposal Information (PPI)</h1>
+      <div class="subtitulo">GMB Containerization Team</div>
+    </div>
+    <img class="logo" src="https://cdn.motor1.com/images/mgl/P46KX/s4/new-gm-logo.webp" alt="Logo da Empresa" />
+  </div>
+
+  <!-- Bloco 1: Informações Técnicas -->
+  <div class="bloco">
+    <h2>Technical Information</h2>
+    <div class="campo"><strong>PN:</strong> {{ registro.pn }}</div>
+    <div class="campo"><strong>Description:</strong> {{ registro.descricao }}</div>
+    <div class="campo"><strong>Platform:</strong> {{ registro.plataforma }}</div>
+    <div class="campo"><strong>Carline:</strong> {{ registro.carro }}</div>
+    <div class="campo"><strong>Plant:</strong> {{ registro.planta }}</div>
+    <div class="campo"><strong>Plant Code:</strong> {{ registro.codigo }}</div>
+  </div>
+
+  <!-- Bloco 2: Informações do Fornecedor -->
+  <div class="bloco">
+    <h2>Supplier Information</h2>
+    <div class="campo"><strong>Supplier:</strong> {{ registro.fornecedor }}</div>
+    <div class="campo"><strong>Address:</strong> {{ registro.endereco }}</div>
+    <div class="campo"><strong>City:</strong> {{ registro.cidade }}</div>
+    <div class="campo"><strong>DUNS:</strong> {{ registro.duns }}</div>
+    <div class="campo"><strong>Responsible:</strong> {{ registro.responsavel }}</div>
+    <div class="campo"><strong>E-mail:</strong> {{ registro.email }}</div>
+    <div class="campo"><strong>Phone:</strong> {{ registro.celular }}</div>
+  </div>
+
+  <!-- Bloco 3: Aprovação e Reposição -->
+  <div class="bloco">
+    <h2>Approval Information</h2>
+    <div class="campo"><strong>Supplier:</strong> {{ registro.rep_fornecedor }}</div>
+    <div class="campo"><strong>Supplier Approval:</strong> {{ registro.aprov_fornecedor }}</div>
+    <div class="campo"><strong>Containers:</strong> {{ registro.rep_containers }}</div>
+    <div class="campo"><strong>Containers Approval:</strong> {{ registro.aprov_containers }}</div>
+  </div>
+
+  <!-- Bloco 4: Imagem da Proposta -->
+  {% if registro.imagem_url %}
+  <div class="bloco">
+    <h2>Image Proposal</h2>
+    <div class="imagem-container">
+      <img src="{{ registro.imagem_url }}" alt="Imagem da proposta" />
+    </div>
+  </div>
+  {% endif %}
+</body>
+</html>
