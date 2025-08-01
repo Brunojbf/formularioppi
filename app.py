@@ -18,10 +18,9 @@ import traceback
 from urllib.parse import urlparse, parse_qs
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from dotenv import load_dotenv
-load_dotenv("sendgrid.env")
 
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+
+SENDGRID_API_KEY = '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'
 
 # Carregar configuração do Supabase
 with open("supabase_config.json") as f:
