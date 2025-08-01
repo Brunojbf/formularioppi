@@ -6,8 +6,7 @@ import uuid
 import json
 from weasyprint import HTML
 import io
-if os.name == 'nt':  # só importa no Windows
-    import win32com.client
+import win32com.client
 from functools import wraps
 import secrets
 import random
@@ -16,6 +15,11 @@ import json
 from datetime import datetime
 import traceback
 from urllib.parse import urlparse, parse_qs
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
+# ⚠️ Coloque sua chave da API aqui temporariamente (ou use variável de ambiente)
+SENDGRID_API_KEY = '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'  # substitua aqui com sua nova chave (segura)
 
 # Carregar configuração do Supabase
 with open("supabase_config.json") as f:
@@ -653,11 +657,7 @@ def gerar_pdf(registro_id):
 
 def send_email_notificacao(email_recipients, subject, pn, fornecedor, planta, carro):
     try:
-        outlook = win32com.client.Dispatch("Outlook.Application")
-        mail = outlook.CreateItem(0)
-        mail.To = ";".join(email_recipients)
-        mail.Subject = subject
-
+        # Corpo HTML do e-mail (mesmo que você já usava no Outlook)
         html_body = f"""
         <html>
         <body>
@@ -677,9 +677,23 @@ def send_email_notificacao(email_recipients, subject, pn, fornecedor, planta, ca
         </html>
         """
 
-        mail.HTMLBody = html_body
-        mail.Send()
-        print("✅ E-mail enviado com sucesso!")
+        # Cria o objeto de e-mail
+        message = Mail(
+            from_email='brunojb_ferrari@hotmail.com',  # deve estar verificado no SendGrid
+            to_emails=email_recipients,
+            subject=subject,
+            html_content=html_body
+        )
+
+        # Envia o e-mail com a chave da API
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+
+        if response.status_code == 202:
+            print("✅ E-mail enviado com sucesso!")
+        else:
+            print(f"⚠️ Código de resposta: {response.status_code}\n{response.body}")
+
     except Exception as e:
         print(f"❌ Erro ao enviar e-mail: {e}")
 
