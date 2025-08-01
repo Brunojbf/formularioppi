@@ -19,8 +19,7 @@ from urllib.parse import urlparse, parse_qs
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-
-SENDGRID_API_KEY = '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'
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
 # Carregar configuração do Supabase
 with open("supabase_config.json") as f:
