@@ -1,0 +1,30 @@
+name: Deploy com SendGrid
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Instalar dependências
+      run: |
+        pip install -r requirements.txt
+
+    - name: Executar aplicação (exemplo)
+      run: |
+        python app.py
