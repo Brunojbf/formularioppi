@@ -3,3 +3,4 @@ python-dotenv
 supabase
 gunicorn
 WeasyPrint==66.0
+sendgrid
