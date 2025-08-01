@@ -2,4 +2,4 @@ Flask
 python-dotenv
 supabase
 gunicorn
-WeasyPrint==25.1.1
+WeasyPrint==66.0
