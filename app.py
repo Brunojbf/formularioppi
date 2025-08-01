@@ -687,7 +687,7 @@ def send_email_notificacao(email_recipients, subject, pn, fornecedor, planta, ca
         )
 
         # Envia o e-mail com a chave da API
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg = SendGridAPIClient('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')
         response = sg.send(message)
 
         if response.status_code == 202:
