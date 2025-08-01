@@ -6,7 +6,8 @@ import uuid
 import json
 from weasyprint import HTML
 import io
-import win32com.client
+if os.name == 'nt':  # só importa no Windows
+    import win32com.client
 from functools import wraps
 import secrets
 import random
