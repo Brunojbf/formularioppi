@@ -7,120 +7,1544 @@
   <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logo" />
   <h1>Packaging Proposal Information (PPI)</h1>
 
-
-
   <form action="{{ url_for('form') }}" method="post" enctype="multipart/form-data">
-    <!-- Bloco 1 -->
-    <fieldset>
-      <legend>Informações Técnicas</legend>
 
-      <label for="pn">PN:</label>
-      <input type="text" id="pn" name="pn" pattern="(\d{8})(,\s*\d{8})*" title="Digite números de 8 dígitos, separados por vírgula" required />
 
+<!-- Pergunta no topo -->
+<div class="grid-container" style="margin-bottom:20px;">
+  <div class="grid-item">
+    <label for="usar_pn_existente">Quer realizar um cadastro baseado em algum PN já existente?</label>
+    <select id="usar_pn_existente" name="usar_pn_existente" onchange="togglePnDropdown()">
+      <option value="nao" selected>Não</option>
+      <option value="sim">Sim</option>
+    </select>
+  </div>
+
+  <div class="grid-item" id="pn_existente_container" style="display:none;">
+    <label for="pn_existente">Selecione o PN</label>
+    <select id="pn_existente" name="pn_existente" onchange="carregarDadosPN()">
+      <option value="">Selecione</option>
+    </select>
+    <span id="pn_status" style="color:red; font-size:0.9em;"></span>
+  </div>
+</div>
+
+<script>
+// Exibe ou oculta o dropdown de PN existente
+document.getElementById("usar_pn_existente").addEventListener("change", () => {
+  const container = document.getElementById("pn_existente_container");
+  if (document.getElementById("usar_pn_existente").value === "sim") {
+    container.style.display = "block";
+    carregarDropdownPN();
+  } else {
+    container.style.display = "none";
+    document.getElementById("pn_existente").innerHTML = '<option value="">Selecione</option>';
+  }
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const pnSelect = document.getElementById("pn_existente");
+  const plantaSelect = document.getElementById("planta");
+  const codigoSelect = document.getElementById("codigo_planta");
+  const ciscoInput = document.getElementById("cisco");
+  const plataformaSelect = document.getElementById("plataforma");
+  const carlineSelect = document.getElementById("carline");
+
+  // Definição das plantas, códigos e plataformas/carros
+  const plantas = {
+    "GM São Caetano do Sul": { codigos: { "B1": "72671", "B2": "72507", "4E": "72667" }, plataformas: { "GEM": ["Tracker","Montana", "Tracker/Montana"], "GSV":["Spin"] }},
+    "GM São José dos Campos": { codigos: { "C1": "72677", "C2": "72669", "4J": "72668" }, plataformas: { "GMI":["S10","Trailblazer", "S10/Trailblazer"] }},
+    "GM Gravataí": { codigos: { "G1": "72475", "KK": "72474" }, plataformas: { "GEM":["Onix", "Onix Plus", "Onix/Onix Plus"] }},
+    "GM Joinville": { codigos: { "HB": "72476" }, plataformas: { "CSS Prime":["Engine"] }},
+    "GM Mogi das Cruzes": { codigos: { "4M": "72477" }, plataformas: { "P&A":["P&A"] }}
+  };
+
+  // --------------------------
+  // Carrega o dropdown de PNs
+  // --------------------------
+  async function carregarDropdownPN() {
+    try {
+      const res = await fetch("/get_pns_fornecedor");
+      const pns = await res.json();
+      pnSelect.innerHTML = '<option value="">Selecione o PN</option>';
+      pns.forEach(pn => {
+        const option = document.createElement("option");
+        option.value = pn.id;
+        option.textContent = pn.pn;
+        pnSelect.appendChild(option);
+      });
+    } catch (err) {
+      console.error("Erro ao carregar PNs:", err);
+    }
+  }
+
+  await carregarDropdownPN();
+
+  // --------------------------
+  // Atualiza Código da Planta, Cisco, Plataforma e Carline
+  // --------------------------
+  function atualizarPlantaCascata(selecionada, plataformaSelecionada, carlineSelecionada) {
+    // Código da Planta
+    codigoSelect.innerHTML = '<option value="">Selecione o Código</option>';
+    ciscoInput.value = "";
+    if (selecionada && plantas[selecionada]) {
+      Object.keys(plantas[selecionada].codigos).forEach(codigo => {
+        const option = document.createElement("option");
+        option.value = codigo;
+        option.textContent = codigo;
+        codigoSelect.appendChild(option);
+      });
+      codigoSelect.disabled = false;
+    } else {
+      codigoSelect.disabled = false;
+    }
+
+    // Plataforma
+    plataformaSelect.innerHTML = '<option value="">Selecione a Plataforma</option>';
+    if (selecionada && plantas[selecionada]) {
+      Object.keys(plantas[selecionada].plataformas).forEach(plat => {
+        const option = document.createElement("option");
+        option.value = plat;
+        option.textContent = plat;
+        plataformaSelect.appendChild(option);
+      });
+    }
+
+    // Carline
+    carlineSelect.innerHTML = '<option value="">Selecione o Carro</option>';
+    if (selecionada && plataformaSelecionada && plantas[selecionada].plataformas[plataformaSelecionada]) {
+      plantas[selecionada].plataformas[plataformaSelecionada].forEach(carro => {
+        const option = document.createElement("option");
+        option.value = carro;
+        option.textContent = carro;
+        carlineSelect.appendChild(option);
+      });
+    }
+
+    // Seleciona valores se fornecidos
+    if (plataformaSelecionada) plataformaSelect.value = plataformaSelecionada;
+    if (carlineSelecionada) carlineSelect.value = carlineSelecionada;
+  }
+
+  // Ao mudar planta manualmente
+  plantaSelect.addEventListener("change", () => atualizarPlantaCascata(plantaSelect.value));
+
+  // Ao mudar plataforma manualmente
+  plataformaSelect.addEventListener("change", () => {
+    const carros = plantas[plantaSelect.value]?.plataformas[plataformaSelect.value] || [];
+    carlineSelect.innerHTML = '<option value="">Selecione o Carro</option>';
+    carros.forEach(carro => {
+      const option = document.createElement("option");
+      option.value = carro;
+      option.textContent = carro;
+      carlineSelect.appendChild(option);
+    });
+  });
+
+  // --------------------------
+  // Carrega dados do PN selecionado
+  // --------------------------
+  pnSelect.addEventListener("change", async () => {
+    const pnId = pnSelect.value;
+    if (!pnId) return;
+
+    try {
+      const res = await fetch(`/get_dados_pn/${pnId}`);
+      const dados = await res.json();
+      if (!dados) return;
+
+      // -------------------
+      // Bloco 1 - Técnico
+      // -------------------
+      ["pn", "descricao", "plataforma", "carline", "planta", "cisco"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      // Atualiza Cascata Planta/Código/Plataforma/Carline
+      atualizarPlantaCascata(dados.planta, dados.plataforma, dados.carline);
+
+      // -------------------
+      // Bloco 4 - Embalagem primária
+      // -------------------
+      ["tipo_primaria","material_primaria"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      // Preenche código_embalagem_primaria sem ser sobrescrito
+      const codigoEmbalagem = document.getElementById("codigo_embalagem_primaria");
+      if (codigoEmbalagem && dados.codigo_embalagem_primaria) {
+        codigoEmbalagem.value = dados.codigo_embalagem_primaria;
+      }
+
+      // Preenche demais campos da primária
+      ["comprimento_primaria","largura_primaria","altura_primaria",
+       "standard_pack_primaria","tara_primaria","peso_unitario_primaria","peso_total_primaria",
+       "altura_nao_ocupada_primaria","ocupacao_primaria","motivo_primaria"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      // Só chama trocarCampoCodigo() se o campo estiver vazio
+      if (typeof trocarCampoCodigo === "function" && !codigoEmbalagem.value) {
+        trocarCampoCodigo();
+      }
+
+      // -------------------
+      // Blocos 2,3,5-9 (demais campos) continuam iguais
+      // -------------------
+      ["fornecedor","endereco","cidade","pais","duns","responsavel","email"].forEach(id => {
+        const el = document.getElementById(id === "fornecedor" ? "nome_fornecedor" : id + "_fornecedor");
+        if (el) el.value = dados[id] || "";
+      });
+
+      ["aplicavel","classe_material","homologacao","codigo_onu","etiqueta_identificacao","etiqueta_risco","etiqueta_manuseio"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      const outrosCampos = ["insumos","aplicavel_secundaria","caixas_camadas_secundaria","camadas_pallet_secundaria",
+        "pecas_pallet_secundaria","comprimento_pallet_secundaria","largura_pallet_secundaria","altura_pallet_secundaria",
+        "peso_pallet_secundaria","material_pallet_secundaria","comprimento_total_secundaria","largura_total_secundaria",
+        "altura_total_secundaria","peso_total_secundaria","empilhamento_estatico","empilhamento_dinamico",
+        "comprimento_primaria_descartavel","largura_primaria_descartavel","altura_primaria_descartavel","peso_primaria_descartavel",
+        "pecas_caixa_primaria_descartavel","comprimento_secundaria_descartavel","largura_secundaria_descartavel","altura_secundaria_descartavel",
+        "peso_secundaria_descartavel","pecas_pallet_descartavel","comentario8"];
+      outrosCampos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      const imagens = [
+        {id: "previewPeca", url: dados.foto_peca_primaria_url},
+        {id: "previewEmbalagem", url: dados.foto_embalagem_peca_primaria_url},
+        {id: "previewSecundaria", url: dados.foto_secundaria_url},
+        {id: "previewDescartavel", url: dados.foto_descartavel_url}
+      ];
+      imagens.forEach(img => {
+        const el = document.getElementById(img.id);
+        if (el && img.url) {
+          el.src = img.url;
+          el.style.display = "block";
+        }
+      });
+
+      ["rep_fornecedor","rep_containers","aprov_containers"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = dados[id] || "";
+      });
+
+      if (typeof atualizarPesoTotal === "function") atualizarPesoTotal();
+      if (typeof atualizarOcupacao === "function") atualizarOcupacao();
+
+    } catch (err) {
+      console.error("Erro ao carregar dados do PN:", err);
+    }
+  });
+});
+</script>
+
+
+
+
+
+
+    <!-- Bloco 1: Informações Técnicas -->
+<fieldset>
+  <legend>1 - Informações Técnicas</legend>
+
+  <!-- Linha 1: PN e Descrição da Peça -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 2;">
+      <label for="pn">PNs:</label>
+      <input type="text" id="pn" name="pn" 
+             pattern="(\d{8})(,\s*\d{8})*" 
+             title="Digite números de 8 dígitos, separados por vírgula" 
+             required />
+    </div>
+    <div style="flex: 1;">
       <label for="descricao">Descrição da Peça:</label>
       <input type="text" id="descricao" name="descricao" required />
+    </div>
+  </div>
 
-      <label for="plataforma">Plataforma:</label>
-      <select id="plataforma" name="plataforma" required>
-        <option value="">Selecione</option>
-        <option value="GEM">GEM</option>
-        <option value="GMI700">GMI700</option>
-        <option value="GSV">GSV</option>
-      </select>
-
-      <label for="carro">Carro:</label>
-      <select id="carro" name="carro" required disabled>
-        <option value="">Selecione a Plataforma Primeiro</option>
-      </select>
-
+  <!-- Linha 2: Planta, Código da Planta e Cisco -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 1;">
       <label for="planta">Planta:</label>
       <select id="planta" name="planta" required>
-        <option value="">Selecione</option>
-        <option value="Planta1">Planta1</option>
-        <option value="Planta2">Planta2</option>
-        <option value="Planta3">Planta3</option>
+        <option value="" disabled selected>Selecione</option>
+        <option value="GM São Caetano do Sul">GM São Caetano do Sul</option>
+        <option value="GM São José dos Campos">GM São José dos Campos</option>
+        <option value="GM Gravataí">GM Gravataí</option>
+        <option value="GM Joinville">GM Joinville</option>
+        <option value="GM Mogi das Cruzes">GM Mogi das Cruzes</option>
       </select>
+    </div>
+      <div style="flex: 1;">
+        <label for="codigo_planta">Código da Planta:</label>
+        <select id="codigo_planta" name="codigo_planta" required disabled
+                aria-label="Selecione o Código da Planta" title="Selecione o Código da Planta">
+          <option value="">Selecione a Planta Primeiro</option>
+        </select>
+      </div>
+    <div style="flex: 1;">
+      <label for="cisco">Cisco:</label>
+      <input type="text" id="cisco" name="cisco" readonly />
+    </div>
+  </div>
 
-      <label for="codigo">Código da Planta:</label>
-      <select id="codigo" name="codigo" required disabled>
+  <!-- Linha 3: Plataforma e Carro -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 1;">
+      <label for="plataforma">Plataforma:</label>
+      <select id="plataforma" name="plataforma" required disabled>
         <option value="">Selecione a Planta Primeiro</option>
       </select>
-    </fieldset>
+    </div>
+    <div style="flex: 1;">
+      <label for="carline">Carline:</label>
+      <select id="carline" name="carline" required disabled>
+        <option value="">Selecione a Plataforma Primeiro</option>
+      </select>
+    </div>
+  </div>
+</fieldset>
 
-    <!-- Bloco 2 -->
-    <fieldset>
-      <legend>Informações do Fornecedor</legend>
 
+    <!-- Bloco 2: Informações do Fornecedor -->
+<fieldset>
+  <legend>2 - Informações do Fornecedor</legend>
+
+  <!-- Linha 1: Fornecedor e DUNS -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 1;">
       <label for="fornecedor">Fornecedor:</label>
-      <input type="text" id="fornecedor" name="fornecedor" required />
-
-      <label for="endereco">Endereço:</label>
-      <input type="text" id="endereco" name="endereco" required />
-
-      <label for="cidade">Cidade:</label>
-      <input type="text" id="cidade" name="cidade" required />
-
+      <input type="text" id="fornecedor" name="fornecedor" value="{{ fornecedor_data.nome }}" readonly required />
+    </div>
+    <div style="flex: 1;">
       <label for="duns">DUNS:</label>
-      <input type="text" id="duns" name="duns" pattern="\d{1,9}" title="Only numbers, up to 9 digits" required />
+      <input type="text" id="duns" name="duns" value="{{ fornecedor_data.duns }}" readonly required />
+    </div>
+  </div>
 
+  <!-- Linha 2: Endereço, Cidade e País -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 2;">
+      <label for="endereco">Endereço:</label>
+      <input type="text" id="endereco" name="endereco" value="{{ fornecedor_data.endereco }}" readonly required />
+    </div>
+    <div style="flex: 1;">
+      <label for="cidade">Cidade:</label>
+      <input type="text" id="cidade" name="cidade" value="{{ fornecedor_data.cidade }}" readonly required />
+    </div>
+    <div style="flex: 1;">
+      <label for="pais">País:</label>
+      <input type="text" id="pais" name="pais" value="{{ fornecedor_data.pais }}" readonly required />
+    </div>
+  </div>
+
+  <!-- Linha 3: Responsável e E-mail -->
+  <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <div style="flex: 1;">
       <label for="responsavel">Responsável:</label>
       <input type="text" id="responsavel" name="responsavel" required />
-
+    </div>
+    <div style="flex: 2;">
       <label for="email">E-mail do Responsável:</label>
-      <input type="email" id="email" name="email" required />
+      <input type="text" id="email" name="email" 
+            value="{{ fornecedor_data.emailforn }}" 
+            placeholder="ex: email1@dominio.com; email2@dominio.com" 
+            pattern="^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,};\s*)*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
+            title="Informe um ou mais e-mails separados por ponto e vírgula"
+            required />
+    </div>
+  </div>
 
-      <label for="celular">Telefone (com DDD):</label>
-      <input type="tel" id="celular" name="celular" pattern="\d{10,11}" title="Only numbers" required />
-    </fieldset>
+</fieldset>
 
-    <!-- Bloco 3 -->
-    <fieldset>
-      <legend>Imagem da Proposta</legend>
 
-      <label for="imagem">Seleciona uma Imagem:</label>
-      <input type="file" id="imagem" name="imagem" accept="image/*" />
+<fieldset>
+  <legend>3 - Materiais Perigosos</legend>
 
-      <!-- Preview da imagem -->
-      <div id="preview-container" style="margin-top: 10px;">
-        <img id="preview" src="#" alt="Pré-visualização" style="display:none; max-width: 200px; border: 1px solid #ccc; padding: 5px; border-radius: 5px;" />
+  <!-- Linha 1: Apenas Aplicável -->
+  <div class="linha-unica">
+    <div class="campo">
+      <label for="aplicavel">Aplicável?</label>
+      <select id="aplicavel" name="aplicavel" required>
+        <option value="" selected disabled>Selecione</option>
+        <option value="Não Aplicável">Não Aplicável</option>
+        <option value="Aplicável">Aplicável</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Container exibido/ocultado -->
+  <div id="materiais-perigosos-extra">
+
+    <!-- Grid de 3 colunas -->
+    <div id="campos-materiais">
+      <div class="campo">
+        <label for="classe_material">Classe do Material</label>
+        <select id="classe_material" name="classe_material">
+          <option value="" disabled selected>Selecione</option>
+          <option value="Classe 1: Explosivos">Classe 1: Explosivos</option>
+          <option value="Classe 2: Vidros">Classe 2: Vidros</option>
+          <option value="Classe 3: Líquidos Inflamáveis">Classe 3: Líquidos Inflamáveis</option>
+          <option value="Classe 4: Sólidos Inflamáveis">Classe 4: Sólidos Inflamáveis</option>
+          <option value="Classe 5: Oxidantes e Peróxidos">Classe 5: Oxidantes e Peróxidos</option>
+          <option value="Classe 6: Tóxico">Classe 6: Tóxico</option>
+          <option value="Classe 7: Radioativo">Classe 7: Radioativo</option>
+          <option value="Classe 8: Corrosivo">Classe 8: Corrosivo</option>
+          <option value="Classe 9: Diversos">Classe 9: Diversos</option>
+        </select>
       </div>
-    </fieldset>
+
+      <div class="campo">
+        <label for="homologacao">Homologação</label>
+        <select id="homologacao" name="homologacao">
+          <option value="" disabled selected>Selecione</option>
+          <option value="Terrestre">Terrestre</option>
+          <option value="Marítimo">Marítimo</option>
+          <option value="Aéreo">Aéreo</option>
+          <option value="Terrestre / Marítimo / Aéreo">Terrestre / Marítimo / Aéreo</option>
+          <option value="Terrestre / Aéreo">Terrestre / Aéreo</option>
+          <option value="Terrestre / Marítimo">Terrestre / Marítimo</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="codigo_onu">Código ONU</label>
+        <input type="number" id="codigo_onu" name="codigo_onu">
+      </div>
+
+      <div class="campo">
+        <label for="etiqueta_identificacao">Etiquetas de Identificação</label>
+        <select id="etiqueta_identificacao" name="etiqueta_identificacao">
+          <option value="" selected disabled>Selecione</option>
+          <option value="OK">OK</option>
+          <option value="NOK">NOK</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="etiqueta_risco">Etiquetas de Risco</label>
+        <select id="etiqueta_risco" name="etiqueta_risco">
+          <option value="" selected disabled>Selecione</option>
+          <option value="OK">OK</option>
+          <option value="NOK">NOK</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="etiqueta_manuseio">Etiquetas de Manuseio</label>
+        <select id="etiqueta_manuseio" name="etiqueta_manuseio">
+          <option value="" selected disabled>Selecione</option>
+          <option value="OK">OK</option>
+          <option value="NOK">NOK</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+</fieldset>
+
+<style>
+  /* === Bloco 3: layout em 3 colunas === */
+  .linha-unica {
+    margin-bottom: 14px;
+  }
+
+  #campos-materiais {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 colunas iguais */
+    gap: 14px 16px;                                    /* espaçamento entre colunas e linhas */
+    align-items: end;                                   /* alinha inputs pelo pé */
+  }
+
+  #campos-materiais .campo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #campos-materiais .campo input,
+  #campos-materiais .campo select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const aplicavel = document.getElementById("aplicavel");
+    const extraFields = document.getElementById("materiais-perigosos-extra");
+
+    function toggleFields() {
+      extraFields.style.display = aplicavel.value === "Aplicável" ? "block" : "none";
+    }
+
+    aplicavel.addEventListener("change", toggleFields);
+    toggleFields();
+  });
+</script>
 
 
-    <!-- Bloco 4 - Aprovação -->
-    <fieldset>
-      <legend>Aprovação</legend>
 
-      <div style="display: flex; gap: 20px;">
-        <div style="flex: 1;">
-          <label for="rep_fornecedor">Representante do Fornecedor:</label>
-          <input type="text" id="rep_fornecedor" name="rep_fornecedor" />
+<!-- Bloco 4: Embalagem Primária -->
+<fieldset>
+  <legend>4 - Embalagem Primária</legend>
+
+  <!-- Linha 1: Tipo, Material, Código da Embalagem, Foto da Peça -->
+  <div class="grid-container">
+    <div class="grid-item">
+      <label for="tipo_primaria">Tipo</label>
+      <select id="tipo_primaria" name="tipo_primaria" required onchange="trocarCampoCodigo()">
+        <option value="" selected disabled>Selecione</option>
+        <option value="Standard">Standard</option>
+        <option value="Not Standard">Not Standard</option>
+        <option value="Especial">Especial</option>
+      </select>
+    </div>
+
+    <div class="grid-item">
+      <label for="material_primaria">Material</label>
+      <select id="material_primaria" name="material_primaria" required onchange="loadCodigosEmbalagem()">
+        <option value="" selected disabled>Selecione</option>
+        <option value="Plástico">Plástico</option>
+        <option value="Papelão">Papelão</option>
+        <option value="Metálico">Metálico</option>
+        <option value="Madeira">Madeira</option>
+      </select>
+    </div>
+
+    <div class="grid-item" id="container_codigo_primaria">
+      <label for="codigo_embalagem_primaria">Código da Embalagem</label>
+      <select id="codigo_embalagem_primaria" name="codigo_embalagem_primaria" required onchange="fillEmbalagemData()">
+        <option value="">Selecione</option>
+      </select>
+    </div>
+
+
+    <div class="grid-item">
+      <label for="foto_peca_primaria">Foto (Peça)</label>
+      <input type="file" id="foto_peca_primaria" name="foto_peca_primaria" accept="image/*" onchange="previewImage(this,'previewPeca')">
+      <img id="previewPeca" src="" alt="Preview" class="preview-imagem">
+    </div>
+  </div>
+
+  <!-- Linha 2: Comprimento, Largura, Altura, Standard Pack, Foto (Embalagem + Peça) -->
+  <div class="grid-container">
+    <div class="grid-item">
+      <label for="comprimento_primaria">Comprimento (mm)</label>
+      <input type="number" id="comprimento_primaria" name="comprimento_primaria">
+    </div>
+    <div class="grid-item">
+      <label for="largura_primaria">Largura (mm)</label>
+      <input type="number" id="largura_primaria" name="largura_primaria">
+    </div>
+    <div class="grid-item">
+      <label for="altura_primaria">Altura (mm)</label>
+      <input type="number" id="altura_primaria" name="altura_primaria">
+    </div>
+    <div class="grid-item">
+      <label for="foto_embalagem_peca_primaria">Foto (Embalagem + Peça)</label>
+      <input type="file" id="foto_embalagem_peca_primaria" name="foto_embalagem_peca_primaria" accept="image/*" onchange="previewImage(this,'previewEmbalagem')">
+      <img id="previewEmbalagem" src="" alt="Preview" class="preview-imagem">
+    </div>
+  </div>
+
+  <!-- Linha 3: STD Pack -->
+  <div class="grid-container">
+    <div class="grid-item">
+      <label for="standard_pack_primaria">Standard Pack</label>
+      <input type="number" id="standard_pack_primaria" name="standard_pack_primaria">
+    </div>
+  </div>
+
+  <!-- Linha 4: Tara, Peso Unitário da Peça, Peso Total -->
+  <div class="grid-container">
+      <div class="grid-item">
+        <label for="tara_primaria">Tara (kg)</label>
+        <input type="number" id="tara_primaria" name="tara_primaria" step="0.01" min="0">
+      </div>
+    <div class="grid-item">
+      <label for="peso_unitario_primaria">Peso Unitário da Peça (kg)</label>
+      <input type="number" id="peso_unitario_primaria" name="peso_unitario_primaria" step="0.01" min="0">
+    </div>
+    <div class="grid-item">
+      <label for="peso_total_primaria">Peso Total (kg)</label>
+      <input type="number" id="peso_total_primaria" name="peso_total_primaria" readonly>
+    </div>
+  </div>
+
+  <!-- Linha 5: Altura não ocupada, Ocupação, Motivo -->
+  <div class="grid-container">
+    <div class="grid-item">
+      <label for="altura_nao_ocupada_primaria">Altura não ocupada (mm)</label>
+      <input type="number" id="altura_nao_ocupada_primaria" name="altura_nao_ocupada_primaria">
+    </div>
+    <div class="grid-item">
+      <label for="ocupacao_primaria">Ocupação (%)</label>
+      <input type="number" id="ocupacao_primaria" name="ocupacao_primaria" step="0.01" readonly>
+    </div>
+    <div class="grid-item">
+      <label for="motivo_primaria">Motivo (85%)</label>
+      <select id="motivo_primaria" name="motivo_primaria">
+        <option value="" selected disabled>Selecione</option>
+        <option value="Limite de Peso">Limite de Peso</option>
+        <option value="Ergonomia">Ergonomia</option>
+        <option value="Qualidade">Qualidade</option>
+        <option value="Geometria da Peça">Geometria da Peça</option>
+      </select>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script>
+
+function trocarCampoCodigo() {
+    const tipo = document.getElementById("tipo_primaria").value;
+    const container = document.getElementById("container_codigo_primaria");
+
+    // Limpa conteúdo atual
+    container.innerHTML = '<label for="codigo_embalagem_primaria">Código da Embalagem</label>';
+
+    if (tipo === "Not Standard") {
+      // Campo vira input de texto
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = "codigo_embalagem_primaria";
+      input.name = "codigo_embalagem_primaria";
+      input.required = true;
+      container.appendChild(input);
+    } else {
+      // Campo continua como select
+      const select = document.createElement("select");
+      select.id = "codigo_embalagem_primaria";
+      select.name = "codigo_embalagem_primaria";
+      select.required = true;
+      select.onchange = fillEmbalagemData;
+
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "Selecione";
+      select.appendChild(option);
+
+      container.appendChild(select);
+
+      // Se tiver material selecionado, recarrega códigos
+      const material = document.getElementById("material_primaria").value;
+      if (material) {
+        loadCodigosEmbalagem();
+      }
+    }
+  }
+
+    // Preview de imagens
+    function previewImage(input, previewId) {
+      const file = input.files[0];
+      const preview = document.getElementById(previewId);
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block"; // garante que a imagem aparece
+      } else {
+        preview.src = "";
+        preview.style.display = "none";
+      }
+    }
+
+    // Função para carregar os códigos da embalagem filtrados por Tipo e Material
+    async function loadCodigosEmbalagem() {
+      const tipo = document.getElementById('tipo_primaria').value;
+      const material = document.getElementById('material_primaria').value;
+      const select = document.getElementById('codigo_embalagem_primaria');
+
+      if(!tipo || !material) return;
+
+      const response = await fetch(`/get_embalagens?tipo=${tipo}&material=${material}`);
+      const data = await response.json();
+
+      select.innerHTML = '<option value="">Selecione</option>';
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.codigo;
+        option.textContent = item.codigo;
+        select.appendChild(option);
+      });
+    }
+
+    // Função para preencher os campos da embalagem selecionada
+    async function fillEmbalagemData() {
+      const codigo = document.getElementById('codigo_embalagem_primaria').value;
+      if(!codigo) return;
+
+      const tipo = document.getElementById('tipo_primaria').value;
+      const material = document.getElementById('material_primaria').value;
+
+      const response = await fetch(`/get_embalagens?tipo=${tipo}&material=${material}&codigo=${codigo}`);
+      const data = await response.json();
+      if(data.length === 0) return;
+
+      const embalagem = data[0];
+      document.getElementById('comprimento_primaria').value = embalagem.comprimento_ext;
+      document.getElementById('largura_primaria').value = embalagem.largura_ext;
+      document.getElementById('altura_primaria').value = embalagem.altura_ext;
+      document.getElementById('tara_primaria').value = embalagem.tara;
+    }
+  </script>
+
+<script type="module">
+(() => {
+  // utilitário seguro
+  const $ = (id) => document.getElementById(id) || null;
+
+  // Variável para armazenar altura (visível dentro do módulo)
+  let alturaInt = null;
+
+  // --- Fetch wrapper: intercepta chamadas a /get_embalagens ---
+  const _origFetch = window.fetch.bind(window);
+  window.fetch = async function(...args) {
+    const requestUrl = args[0] instanceof Request ? args[0].url : String(args[0]);
+    const resp = await _origFetch(...args);
+    try {
+      if (typeof requestUrl === 'string' && requestUrl.includes('/get_embalagens')) {
+        // tenta obter JSON (sem quebrar se for text/html)
+        const copy = resp.clone();
+        let data = null;
+        try { data = await copy.json(); }
+        catch (e) {
+          // fallback: tenta extrair altura_int de texto bruto
+          const txt = await copy.text();
+          const m = txt.match(/"altura_int"\s*:\s*["']?([0-9.,]+)["']?/i);
+          if (m) data = { altura_int: m[1] };
+        }
+
+        // Normaliza estruturas (array -> objeto)
+        if (Array.isArray(data) && data.length) data = data[0];
+
+        if (data && data.altura_int !== undefined && data.altura_int !== null) {
+          alturaInt = parseFloat(String(data.altura_int).replace(',', '.'));
+          console.log('[wrapper] altura_int encontrada em /get_embalagens ->', alturaInt);
+          try { atualizarOcupacao(); } catch(e){ console.warn('[wrapper] atualizarOcupacao falhou', e); }
+        } else {
+          // se não veio altura_int, tenta extrair codigo da query string e chamar /get_altura
+          try {
+            const u = new URL(requestUrl, window.location.origin);
+            const codigoParam = u.searchParams.get('codigo');
+            if (codigoParam) {
+              console.log('[wrapper] /get_embalagens sem altura_int — chamando /get_altura/', codigoParam);
+              // chama função que fará fetch para /get_altura
+              // não aguardamos (async) — mesmo assim ela atualizará o campo quando terminar
+              buscarAlturaInt(codigoParam).catch(err => console.error('[wrapper] buscarAlturaInt erro:', err));
+            }
+          } catch(e){ /* ignore URL parse errors */ }
+        }
+      }
+    } catch (err) {
+      console.error('[wrapper] erro ao processar resposta de /get_embalagens', err);
+    }
+
+    return resp;
+  };
+
+  // --- Função que chama o endpoint /get_altura/<codigo> ---
+  async function buscarAlturaInt(codigo) {
+    if (!codigo) {
+      alturaInt = null;
+      atualizarOcupacao();
+      return;
+    }
+    console.log('[buscarAlturaInt] solicitando /get_altura/' + codigo);
+    try {
+      const resp = await fetch(`/get_altura/${encodeURIComponent(codigo)}`, { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) {
+        console.warn('[buscarAlturaInt] resposta não-ok:', resp.status);
+        alturaInt = null;
+      } else {
+        const data = await resp.json();
+        if (data && data.altura_int !== undefined && data.altura_int !== null) {
+          alturaInt = parseFloat(String(data.altura_int).replace(',', '.'));
+          console.log('[buscarAlturaInt] altura obtida:', alturaInt);
+        } else {
+          console.warn('[buscarAlturaInt] body sem altura_int:', data);
+          alturaInt = null;
+        }
+      }
+    } catch (err) {
+      console.error('[buscarAlturaInt] erro ao obter altura:', err);
+      alturaInt = null;
+    }
+    atualizarOcupacao();
+  }
+
+  // --- Função para atualizar peso total (null-safe) ---
+  function atualizarPesoTotal() {
+    const pu = parseFloat($('peso_unitario_primaria')?.value) || 0;
+    const sp = parseFloat($('standard_pack_primaria')?.value) || 0;
+    const t = parseFloat($('tara_primaria')?.value) || 0;
+    const total = (pu * sp) + t;
+    if ($('peso_total_primaria')) $('peso_total_primaria').value = isFinite(total) ? total.toFixed(2) : '';
+    console.log('[atualizarPesoTotal]', { pu, sp, t, total });
+  }
+
+  // --- Função que atualiza ocupação com base em alturaInt ---
+  function atualizarOcupacao() {
+    const altNaoEl = $('altura_nao_ocupada_primaria');
+    const ocupEl = $('ocupacao_primaria');
+    const motivoEl = $('motivo_primaria');
+    const motivoContainer = motivoEl ? motivoEl.parentElement : null;
+
+    const alturaNaoOcupada = Number(altNaoEl?.value);
+    console.log('[atualizarOcupacao] alturaNaoOcupada=', alturaNaoOcupada, 'alturaInt=', alturaInt);
+
+    if (!isFinite(alturaNaoOcupada) || !alturaInt || alturaInt <= 0) {
+      if (ocupEl) ocupEl.value = '';
+      if (motivoContainer && motivoEl) { motivoContainer.style.display = 'none'; motivoEl.disabled = true; motivoEl.value = ''; }
+      return;
+    }
+
+    let ocupacao = (1 - (alturaNaoOcupada / alturaInt)) * 100;
+    if (!isFinite(ocupacao)) { if (ocupEl) ocupEl.value = ''; return; }
+    ocupacao = Math.max(0, Math.min(100, ocupacao));
+    if (ocupEl) ocupEl.value = ocupacao.toFixed(2);
+
+    if (motivoContainer && motivoEl) {
+      if (ocupacao < 85) { motivoContainer.style.display = 'block'; motivoEl.disabled = false; }
+      else { motivoContainer.style.display = 'none'; motivoEl.disabled = true; motivoEl.value = ''; }
+    }
+  }
+
+  // --- Bindings seguros e delegação para elementos dinâmicos ---
+  function attachListeners() {
+    $('peso_unitario_primaria')?.addEventListener('input', atualizarPesoTotal);
+    $('standard_pack_primaria')?.addEventListener('input', atualizarPesoTotal);
+    $('tara_primaria')?.addEventListener('input', atualizarPesoTotal);
+    $('altura_nao_ocupada_primaria')?.addEventListener('input', atualizarOcupacao);
+
+    // Delegação: se o elemento for criado/recriado, o evento ainda captura
+    document.addEventListener('change', (e) => {
+      const tgt = e.target;
+      if (!tgt) return;
+      if (tgt.id === 'codigo_embalagem_primaria') {
+        const codigo = tgt.value;
+        console.log('[delegation] codigo_embalagem_primaria mudou ->', codigo);
+        buscarAlturaInt(codigo).catch(err => console.error(err));
+      }
+    });
+  }
+
+  // --- Inicialização quando DOM estiver pronto ---
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { attachListeners(); atualizarPesoTotal(); atualizarOcupacao(); });
+  } else {
+    attachListeners(); atualizarPesoTotal(); atualizarOcupacao();
+  }
+
+  // Função de teste no console
+  window.__buscarAlturaInt = async (c) => { await buscarAlturaInt(c); return alturaInt; };
+
+  // Export para debug rápido (opcional)
+  window.__debug_alturaInt = () => alturaInt;
+
+})(); 
+</script>
+
+
+
+</fieldset>
+
+<!-- BLOCO 5: Insumos da Embalagem -->
+<fieldset>
+  <legend>5 - Insumos da Embalagem</legend>
+
+<div id="container-insumos">
+  <!-- Linha modelo, oculta -->
+  <div class="insumo-linha modelo" style="display:none;">
+    <select name="material[]">
+      <option value="">Selecione o material</option>
+      <option value="Material 1">Material 1</option>
+      <option value="Material 2">Material 2</option>
+    </select>
+
+    <input type="number" name="comprimento_insumo[]" placeholder="Comprimento (mm)">
+    <input type="number" name="largura_insumo[]" placeholder="Largura (mm)">
+    <input type="number" name="espessura_insumo[]" placeholder="Espessura (mm)">
+    <input type="number" name="pesounitario_insumo[]" placeholder="Peso Unitário (kg)" step="0.01" min="0">
+
+    <input type="file" name="imagem[]" accept="image/*" class="input-imagem">
+    <img class="preview-imagem" src="" alt="Pré-visualização">
+
+    <button type="button" class="remover-linha">Remover</button>
+  </div>
+
+  <!-- Primeira linha visível -->
+  <div class="insumo-linha">
+    <!-- Os mesmos campos da linha modelo -->
+    <select name="material[]">
+      <option value="">Selecione o material</option>
+      <option value="Material 1">Material 1</option>
+      <option value="Material 2">Material 2</option>
+    </select>
+
+    <input type="number" name="comprimento_insumo[]" placeholder="Comprimento">
+    <input type="number" name="largura_insumo[]" placeholder="Largura">
+    <input type="number" name="espessura_insumo[]" placeholder="Espessura">
+    <input type="number" name="pesounitario_insumo[]" placeholder="Peso Unitário" step="0.01" min="0">
+
+    <input type="file" name="imagem[]" accept="image/*" class="input-imagem">
+    <img class="preview-imagem" src="" alt="Pré-visualização">
+
+    <button type="button" class="remover-linha">Remover</button>
+  </div>
+</div>
+
+<button type="button" id="adicionar-linha">Adicionar Insumo</button>
+</fieldset>
+
+<script>
+  const container = document.getElementById('container-insumos');
+  const adicionar = document.getElementById('adicionar-linha');
+  const modelo = container.querySelector('.insumo-linha.modelo');
+
+  adicionar.addEventListener('click', () => {
+    const novaLinha = modelo.cloneNode(true);
+    novaLinha.classList.remove('modelo');
+    novaLinha.style.display = 'flex';
+    container.appendChild(novaLinha);
+  });
+
+  container.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remover-linha')) {
+      const linhas = container.querySelectorAll('.insumo-linha:not(.modelo)');
+      if (linhas.length > 1) e.target.closest('.insumo-linha').remove();
+    }
+  });
+
+  container.addEventListener('change', (e) => {
+    if (e.target.classList.contains('input-imagem')) {
+      const file = e.target.files[0];
+      const img = e.target.nextElementSibling;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          img.src = reader.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        img.src = '';
+        img.style.display = 'none';
+      }
+    }
+  });
+</script>
+
+
+<style>
+  /* Linha do insumo */
+  .insumo-linha {
+    display: flex;
+    flex-wrap: nowrap; /* mantém todos na mesma linha */
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .insumo-linha select,
+  .insumo-linha input[type="number"],
+  .insumo-linha input[type="file"] {
+    flex: 1 1 120px; /* ocupa proporcionalmente o espaço */
+    min-width: 80px;
+  }
+
+  .insumo-linha .preview-imagem {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    display: none;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+
+  .insumo-linha .remover-linha {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  .insumo-linha .remover-linha:hover {
+    background-color: #a71d2a;
+  }
+
+  /* Botão adicionar */
+  #adicionar-linha {
+    display: block;
+    margin-top: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  #adicionar-linha:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+<!-- Bloco 6: Embalagem Secundária -->
+<fieldset>
+  <legend>6 - Embalagem Secundária</legend>
+
+  <div class="grid-secundaria">
+
+    <!-- Mensagem quando não aplicável -->
+    <div id="msg-nao-aplicavel" style="display:none; color:#b00; font-weight:bold; margin-bottom:10px;">
+      Este bloco não se aplica para o tipo de embalagem selecionada.
+    </div>
+
+    <!-- Demais campos (mostrados apenas se size == Small Lot) -->
+    <div id="campos-secundaria">
+
+      <!-- Caixa 1: Informações Gerais -->
+      <div class="grupo-campos">
+        <h4>Informações Gerais</h4>
+        <div class="campo">
+          <label for="caixas_camadas_secundaria">Caixas/Camada</label>
+          <input type="number" id="caixas_camadas_secundaria" name="caixas_camadas_secundaria" step="1">
         </div>
-        <div style="flex: 1;">
-          <label for="aprov_fornecedor">Aprovação:</label>
-          <select id="aprov_fornecedor" name="aprov_fornecedor">
+
+        <div class="campo">
+          <label for="camadas_pallet_secundaria">Camadas/Pallet</label>
+          <input type="number" id="camadas_pallet_secundaria" name="camadas_pallet_secundaria" step="1">
+        </div>
+
+        <div class="campo">
+          <label for="pecas_pallet_secundaria">Peças/Pallet</label>
+          <input type="number" id="pecas_pallet_secundaria" name="pecas_pallet_secundaria" step="1" readonly>
+        </div>
+      </div>
+
+      <!-- Caixa 2: Informações do Pallet -->
+      <div class="grupo-campos">
+        <h4>Informações do Pallet</h4>
+        <div class="campo">
+          <label for="comprimento_pallet_secundaria">Comprimento Pallet (mm)</label>
+          <input type="number" id="comprimento_pallet_secundaria" name="comprimento_pallet_secundaria" step="any">
+        </div>
+
+        <div class="campo">
+          <label for="largura_pallet_secundaria">Largura Pallet (mm)</label>
+          <input type="number" id="largura_pallet_secundaria" name="largura_pallet_secundaria" step="any">
+        </div>
+
+        <div class="campo">
+          <label for="altura_pallet_secundaria">Altura Pallet (mm)</label>
+          <input type="number" id="altura_pallet_secundaria" name="altura_pallet_secundaria" step="any">
+        </div>
+
+        <div class="campo">
+          <label for="peso_pallet_secundaria">Peso Pallet (kg)</label>
+          <input type="number" id="peso_pallet_secundaria" name="peso_pallet_secundaria" step="0.01" min="0">
+        </div>
+
+        <div class="campo">
+          <label for="material_pallet_secundaria">Material Pallet</label>
+          <select id="material_pallet_secundaria" name="material_pallet_secundaria">
             <option value="" selected disabled>Selecione</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="reprovado">Reprovado</option>
+            <option value="Madeira">Madeira</option>
+            <option value="Plastico">Plástico</option>
+            <option value="Papelão">Papelão</option>
+            <option value="Metalico">Metálico</option>
           </select>
         </div>
       </div>
 
-      <div style="display: none;">
-        <div style="flex: 1;">
-          <label for="rep_containers"><strong>Representante de Containers:</strong></label>
-          <input type="text" id="rep_containers" name="rep_containers" />
+      <!-- Caixa 3: Unit Load -->
+      <div class="grupo-campos">
+        <h4>Unit Load</h4>
+        <div class="campo">
+          <label for="comprimento_total_secundaria">Comprimento Total (mm)</label>
+          <input type="number" id="comprimento_total_secundaria" name="comprimento_total_secundaria" readonly>
         </div>
-        <div style="flex: 1;">
-          <label for="aprov_containers"><strong>Aprovação:</strong></label>
-          <select id="aprov_containers" name="aprov_containers">
-            <option value="aguardando aprovacao" selected>Aguardando Aprovação</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="reprovado">Reprovado</option>
-          </select>
+
+        <div class="campo">
+          <label for="largura_total_secundaria">Largura Total (mm)</label>
+          <input type="number" id="largura_total_secundaria" name="largura_total_secundaria" readonly>
+        </div>
+
+        <div class="campo">
+          <label for="altura_total_secundaria">Altura Total (mm)</label>
+          <input type="number" id="altura_total_secundaria" name="altura_total_secundaria" readonly>
+        </div>
+
+        <div class="campo">
+          <label for="peso_total_secundaria">Peso Total (kg)</label>
+          <input type="number" id="peso_total_secundaria" name="peso_total_secundaria" readonly>
         </div>
       </div>
-    </fieldset>
+
+      <!-- Foto -->
+      <div class="grupo-campos">
+        <h4>Foto</h4>
+        <div class="campo">
+          <label for="foto_secundaria">Pallet + Caixas</label>
+          <input type="file" id="foto_secundaria" name="foto_secundaria" accept="image/*">
+          <img id="preview_foto_secundaria" src="" alt="Pré-visualização" class="preview-imagem">
+        </div>
+      </div>
+    </div>
+  </div>
+</fieldset>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const camposSecundaria = document.getElementById('campos-secundaria');
+    const msgNaoAplicavel = document.getElementById('msg-nao-aplicavel');
+    const codigoEmbalagem = document.getElementById('codigo_embalagem_primaria'); // do Bloco 4
+
+    async function verificarSizeEmbalagem(codigo) {
+      if (!codigo) return;
+
+      try {
+        const response = await fetch(`/api/embalagens/${codigo}`);
+        const data = await response.json();
+
+        if (data.size === "Small Lot") {
+          camposSecundaria.style.display = 'grid';
+          msgNaoAplicavel.style.display = 'none';
+          // habilita campos
+          camposSecundaria.querySelectorAll('input, select').forEach(el => el.disabled = false);
+        } else {
+          camposSecundaria.style.display = 'none';
+          msgNaoAplicavel.style.display = 'block';
+          // desabilita campos
+          camposSecundaria.querySelectorAll('input, select').forEach(el => el.disabled = true);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar embalagem:", err);
+      }
+    }
+
+    // dispara quando muda a embalagem primária
+    codigoEmbalagem.addEventListener('change', () => {
+      verificarSizeEmbalagem(codigoEmbalagem.value);
+    });
+  });
+
+
+  // Pré-visualização da foto
+  document.getElementById('foto_secundaria').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const img = document.getElementById('preview_foto_secundaria');
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+  });
+
+  // Função para calcular Unit Load e Peças/Pallet da Embalagem Secundária
+  function calcularUnitLoadSecundaria() {
+    // Valores da embalagem secundária
+    const comprimentoPallet = parseFloat(document.getElementById('comprimento_pallet_secundaria').value) || 0;
+    const larguraPallet = parseFloat(document.getElementById('largura_pallet_secundaria').value) || 0;
+    const alturaPallet = parseFloat(document.getElementById('altura_pallet_secundaria').value) || 0;
+    const pesoPallet = parseFloat(document.getElementById('peso_pallet_secundaria').value) || 0;
+
+    const caixasPorCamada = parseInt(document.getElementById('caixas_camadas_secundaria').value) || 0;
+    const camadasPallet = parseInt(document.getElementById('camadas_pallet_secundaria').value) || 0;
+
+    // Valores da embalagem primária (Bloco 4)
+    const alturaPrimaria = parseFloat(document.getElementById('altura_primaria').value) || 0;
+    const pesoTotalPrimaria = parseFloat(document.getElementById('peso_total_primaria').value) || 0;
+    const standardPack = parseInt(document.getElementById('standard_pack_primaria').value) || 0;
+
+    // Cálculos Unit Load
+    const comprimentoTotal = comprimentoPallet;
+    const larguraTotal = larguraPallet;
+    const alturaTotal = alturaPallet + (camadasPallet * alturaPrimaria);
+    const pesoTotalSecundaria = pesoPallet + (caixasPorCamada * camadasPallet * pesoTotalPrimaria);
+
+    // Cálculo Peças/Pallet
+    const pecasPallet = standardPack * caixasPorCamada * camadasPallet;
+
+    // Atualiza os campos do Bloco 6
+    document.getElementById('comprimento_total_secundaria').value = comprimentoTotal.toFixed(0);
+    document.getElementById('largura_total_secundaria').value = larguraTotal.toFixed(0);
+    document.getElementById('altura_total_secundaria').value = alturaTotal.toFixed(0);
+    document.getElementById('peso_total_secundaria').value = pesoTotalSecundaria.toFixed(2);
+    document.getElementById('pecas_pallet_secundaria').value = pecasPallet;
+  }
+
+  // Adiciona event listeners aos campos que influenciam o cálculo
+  ['comprimento_pallet_secundaria', 'largura_pallet_secundaria', 'altura_pallet_secundaria', 'peso_pallet_secundaria',
+   'caixas_camadas_secundaria', 'camadas_pallet_secundaria',
+   'altura_primaria', 'peso_total_primaria', 'standard_pack_primaria'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcularUnitLoadSecundaria);
+  });
+
+  // Executa cálculo inicial caso já haja valores
+  calcularUnitLoadSecundaria();
+
+</script>
+
+<style>
+/* === Bloco 6: layout em 4 colunas === */
+.grid-secundaria { /* apenas para organização visual */
+  width: 100%;
+}
+
+.linha-unica {
+  margin-bottom: 14px;      /* espaço entre a 1ª linha e o restante */
+}
+
+/* Aqui está o grid de 4 colunas para os demais campos */
+#campos-secundaria {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 colunas iguais */
+  gap: 14px 16px;                                   /* espaçamento entre itens */
+  align-items: start;                                  /* alinha inputs pelo “pé” */
+}
+
+/* Cada campo é um “cartãozinho” com label em cima e input embaixo */
+#campos-secundaria .campo {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Garante que inputs/selects ocupem toda a célula do grid */
+#campos-secundaria .campo input,
+#campos-secundaria .campo select {
+  width: 100%;
+}
+
+/* Preview da foto dentro do grid */
+#campos-secundaria .preview-imagem {
+  max-width: 200px;
+  height: auto;
+  display: none;            /* é mostrado pelo JS quando escolher a imagem */
+  margin-top: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+}
+</style>
+
+
+<!-- Bloco 7: Empilhamento -->
+<fieldset>
+  <legend>7 - Empilhamento</legend>
+
+  <div class="grid-empilhamento" style="display: flex; gap: 20px; align-items: flex-start;">
+    
+    <!-- Empilhamento Estático -->
+    <div class="grupo-campos">
+      <div class="campo">
+        <label for="empilhamento_estatico">Empilhamento Estático</label>
+        <input type="number" id="empilhamento_estatico" name="empilhamento_estatico" step="1" min="0">
+      </div>
+    </div>
+
+    <!-- Empilhamento Dinâmico -->
+    <div class="grupo-campos">
+      <div class="campo">
+        <label for="empilhamento_dinamico">Empilhamento Dinâmico</label>
+        <input type="number" id="empilhamento_dinamico" name="empilhamento_dinamico" step="1" min="0">
+      </div>
+    </div>
+
+  </div>
+</fieldset>
+
+
+<!-- BLOCO 8 - Alternativa Descartável -->
+
+<fieldset>
+  <legend>8 - Embalagem Alternativa Descartável</legend>
+
+  <div class="grid-descartavel">
+
+    <!-- Embalagem Primária -->
+    <div class="subdivisao">
+      <h4>Embalagem Primária</h4>
+      <div class="campos-descartavel">
+        <div class="campo">
+          <label for="comprimento_primaria_descartavel">Comprimento (mm)</label>
+          <input type="number" id="comprimento_primaria_descartavel" name="comprimento_primaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="largura_primaria_descartavel">Largura (mm)</label>
+          <input type="number" id="largura_primaria_descartavel" name="largura_primaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="altura_primaria_descartavel">Altura (mm)</label>
+          <input type="number" id="altura_primaria_descartavel" name="altura_primaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="peso_primaria_descartavel">Peso (kg)</label>
+          <input type="number" id="peso_primaria_descartavel" name="peso_primaria_descartavel" step="0.01" min="0">
+        </div>
+        <div class="campo">
+          <label for="pecas_caixa_primaria_descartavel">Peças por caixa</label>
+          <input type="number" id="pecas_caixa_primaria_descartavel" name="pecas_caixa_primaria_descartavel" step="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- Embalagem Secundária -->
+    <div class="subdivisao">
+      <h4>Embalagem Secundária</h4>
+      <div class="campos-descartavel">
+        <div class="campo">
+          <label for="comprimento_secundaria_descartavel">Comprimento (mm)</label>
+          <input type="number" id="comprimento_secundaria_descartavel" name="comprimento_secundaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="largura_secundaria_descartavel">Largura (mm)</label>
+          <input type="number" id="largura_secundaria_descartavel" name="largura_secundaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="altura_secundaria_descartavel">Altura (mm)</label>
+          <input type="number" id="altura_secundaria_descartavel" name="altura_secundaria_descartavel">
+        </div>
+        <div class="campo">
+          <label for="peso_secundaria_descartavel">Peso (kg)</label>
+          <input type="number" id="peso_secundaria_descartavel" name="peso_secundaria_descartavel" step="0.01" min="0"">
+        </div>
+        <div class="campo">
+          <label for="pecas_pallet_descartavel">Peças por pallet</label>
+          <input type="number" id="pecas_pallet_descartavel" name="pecas_pallet_descartavel" step="1">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comentários e Foto -->
+  <div class="linha-unica">
+    <div class="campo">
+      <label for="foto_descartavel">Foto</label>
+      <input type="file" id="foto_descartavel" name="foto_descartavel" accept="image/*" class="input-imagem">
+      <img id="preview_foto_descartavel" src="" alt="Pré-visualização" class="preview-imagem">
+    </div>
+  </div>
+</fieldset>
+
+
+
+<style>
+  .grid-descartavel {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .subdivisao {
+    flex: 1 1 45%;
+    border: 1px solid #cccccc73;
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .subdivisao h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1rem;
+  }
+
+  .campos-descartavel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 16px;
+    align-items: end;
+  }
+
+  .campos-descartavel .campo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .campos-descartavel .campo input {
+    width: 100%;
+  }
+
+  .linha-unica {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .linha-unica .campo input,
+  .linha-unica .campo select {
+    width: 100%;
+  }
+
+  .preview-imagem {
+    max-width: 150px;
+    height: auto;
+    display: none;
+    margin-top: 8px;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+</style>
+
+<script>
+  // Pre-visualização da imagem
+  document.querySelector('#foto_descartavel').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const img = document.querySelector('#preview_foto_descartavel');
+    if(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+  });
+</script>
+
+<script>
+  const materialPrimaria = document.getElementById('material_primaria'); // campo do bloco 4
+
+  // Seleciona o fieldset que tem o legend com "8 - Embalagem Alternativa Descartável"
+  const blocos = document.querySelectorAll('fieldset');
+  let bloco8 = null;
+
+  blocos.forEach(fieldset => {
+    const legend = fieldset.querySelector('legend');
+    if (legend && legend.textContent.trim() === '8 - Embalagem Alternativa Descartável') {
+      bloco8 = fieldset;
+    }
+  });
+
+  if (!bloco8) {
+    console.error('Bloco 8 não encontrado!');
+  }
+
+  let mensagemNaoAplicavel = null;
+
+  function atualizarBloco8() {
+    if (!bloco8) return;
+
+    const valor = materialPrimaria.value.trim().toLowerCase();
+
+    if (valor === 'papelão' || valor === 'madeira') {
+      bloco8.style.display = 'none';
+
+      // Cria a mensagem se ainda não existir
+      if (!mensagemNaoAplicavel) {
+        mensagemNaoAplicavel = document.createElement('p');
+        mensagemNaoAplicavel.textContent = "O Bloco 8 - Embalagem Alternativa Descartável não é aplicável para Papelão ou Madeira.";
+        mensagemNaoAplicavel.style.color = 'red';
+        mensagemNaoAplicavel.style.fontWeight = '700';
+        bloco8.parentElement.insertBefore(mensagemNaoAplicavel, bloco8);
+      }
+    } else {
+      bloco8.style.display = 'block';
+
+      // Remove a mensagem se existir
+      if (mensagemNaoAplicavel) {
+        mensagemNaoAplicavel.remove();
+        mensagemNaoAplicavel = null;
+      }
+    }
+  }
+
+  // Inicializa a visibilidade ao carregar a página
+  atualizarBloco8();
+
+  // Observa mudanças no campo material_primaria
+  materialPrimaria.addEventListener('change', atualizarBloco8);
+</script>
+
+
+<!-- Bloco 9: Observações -->
+<fieldset>
+  <legend>9 - Comentário e Observações Adicionais</legend>
+
+  <input type="text" id="comentario8" name="comentario8">
+</fieldset>
+
+<!-- Bloco 10: Aprovação -->
+<fieldset>
+  <legend>10 - Aprovação</legend>
+  
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px;">
+    <div style="flex: 1 1 200px;">
+      <label for="rep_fornecedor">Representante do Fornecedor:</label>
+      <input type="text" id="rep_fornecedor" name="rep_fornecedor" />
+    </div>
+    <div style="flex: 1 1 200px;">
+      <label for="aprov_fornecedor">Aprovação:</label>
+      <select id="aprov_fornecedor" name="aprov_fornecedor">
+        <option value="" selected disabled>Selecione</option>
+        <option value="aprovado">Aprovado</option>
+        <option value="reprovado">Reprovado</option>
+      </select>
+    </div>
+    <div style="flex: 1 1 200px;">
+      <label for="data_aprov_fornecedor">Data:</label>
+      <input type="text" id="data_aprov_fornecedor" name="data_aprov_fornecedor" readonly />
+    </div>
+  </div>
+
+  <div style="display: none; gap: 20px; flex-wrap: wrap; margin-top: 10px;">
+    <div style="flex: 1 1 200px;">
+      <label for="rep_containers"><strong>Representante de Containers:</strong></label>
+      <input type="text" id="rep_containers" name="rep_containers" />
+    </div>
+    <div style="flex: 1 1 200px;">
+      <label for="aprov_containers"><strong>Aprovação:</strong></label>
+      <select id="aprov_containers" name="aprov_containers">
+        <option value="aguardando aprovacao" selected>Aguardando Aprovação</option>
+        <option value="aprovado">Aprovado</option>
+        <option value="reprovado">Reprovado</option>
+      </select>
+    </div>
+    <div style="flex: 1 1 200px;">
+      <label for="data_aprov_containers"><strong>Data:</strong></label>
+      <input type="text" id="data_aprov_containers" name="data_aprov_containers" readonly />
+    </div>
+  </div>
+</fieldset>
+
+<script>
+  // Preencher data atual automaticamente
+  function formatarDataAtual() {
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0'); // Janeiro = 0
+    const ano = hoje.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  document.getElementById('data_aprov_fornecedor').value = formatarDataAtual();
+  document.getElementById('data_aprov_containers').value = formatarDataAtual();
+</script>
+
 
     <input type="hidden" name="acao" value="novo_cadastro">
     <button type="submit">Submeter</button>
@@ -129,72 +1553,175 @@
 </div>
 
 <script>
-const inputImagem = document.getElementById('imagem');
-const previewImg = document.getElementById('preview');
-
-inputImagem.addEventListener('change', function () {
-  const file = this.files[0];
-  if (file) {
-    const reader = new FileReader();
-
-    reader.addEventListener('load', function () {
-      previewImg.setAttribute('src', this.result);
-      previewImg.style.display = 'block';
-    });
-
-    reader.readAsDataURL(file);
-  } else {
-    previewImg.style.display = 'none';
-  }
-});
-
-
-  const plataformaSelect = document.getElementById('plataforma');
-  const carroSelect = document.getElementById('carro');
-  const plantaSelect = document.getElementById('planta');
-  const codigoSelect = document.getElementById('codigo');
-
-  const carrosPorPlataforma = {
-    GEM: ['Carro1', 'Carro2', 'Carro3'],
-    GMI700: ['Carro4', 'Carro5'],
-    GSV: ['Carro6']
-  };
-
-  const codigosPorPlanta = {
-    Planta1: ['P1', 'P2', 'P3'],
-    Planta2: ['P4', 'P5', 'P6'],
-    Planta3: ['P7', 'P8', 'P9']
-  };
-
-  plataformaSelect.addEventListener('change', () => {
-    const plataforma = plataformaSelect.value;
-    carroSelect.innerHTML = '<option value="">Selecione o Carro</option>';
-    if (plataforma && carrosPorPlataforma[plataforma]) {
-      carroSelect.disabled = false;
-      carrosPorPlataforma[plataforma].forEach(carro => {
-        const option = document.createElement('option');
-        option.value = carro;
-        option.textContent = carro;
-        carroSelect.appendChild(option);
+  // Preview de imagem
+  const inputImagem = document.getElementById('imagem');
+  const previewImg = document.getElementById('preview');
+  inputImagem.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.addEventListener('load', function () {
+        previewImg.setAttribute('src', this.result);
+        previewImg.style.display = 'block';
       });
+      reader.readAsDataURL(file);
     } else {
-      carroSelect.disabled = true;
+      previewImg.style.display = 'none';
     }
   });
 
-  plantaSelect.addEventListener('change', () => {
-    const planta = plantaSelect.value;
+</script>
+
+<script>
+  // Dados de exemplo
+  const plantas = {
+    "GM São Caetano do Sul": { codigos: { "B1": "72671", "B2": "72507", "4E": "72667" }, plataformas: { "GEM": ["Tracker","Montana", "Tracker/Montana"], "GSV":["Spin"] }},
+    "GM São José dos Campos": { codigos: { "C1": "72677", "C2": "72669", "4J": "72668" }, plataformas: { "GMI":["S10","Trailblazer", "S10/Trailblazer"] }},
+    "GM Gravataí": { codigos: { "G1": "72475", "KK": "72474" }, plataformas: { "GEM":["Onix", "Onix Plus", "Onix/Onix Plus"] }},
+    "GM Joinville": { codigos: { "HB": "72476" }, plataformas: { "CSS Prime":["Engine"] }},
+    "GM Mogi das Cruzes": { codigos: { "4M": "72477" }, plataformas: { "P&A":["P&A"] }}
+  };
+
+  const plantaSelect = document.getElementById("planta");
+  const codigoSelect = document.getElementById("codigo_planta");
+  const ciscoInput = document.getElementById("cisco");
+  const plataformaSelect = document.getElementById("plataforma");
+  const carlineSelect = document.getElementById("carline");
+
+  // Ao mudar a Planta
+  plantaSelect.addEventListener("change", function() {
+    const selecionada = this.value;
+
+    // Atualiza Código da Planta
     codigoSelect.innerHTML = '<option value="">Selecione o Código</option>';
-    if (planta && codigosPorPlanta[planta]) {
-      codigoSelect.disabled = false;
-      codigosPorPlanta[planta].forEach(codigo => {
-        const option = document.createElement('option');
+    ciscoInput.value = "";
+    if (selecionada && plantas[selecionada]) {
+      Object.keys(plantas[selecionada].codigos).forEach(codigo => {
+        const option = document.createElement("option");
         option.value = codigo;
         option.textContent = codigo;
         codigoSelect.appendChild(option);
       });
+      codigoSelect.disabled = false;
     } else {
       codigoSelect.disabled = true;
+    }
+
+    // Atualiza Plataforma
+    plataformaSelect.innerHTML = '<option value="">Selecione</option>';
+    carlineSelect.innerHTML = '<option value="">Selecione a Plataforma Primeiro</option>';
+    carlineSelect.disabled = true;
+
+    if (selecionada && plantas[selecionada]) {
+      Object.keys(plantas[selecionada].plataformas).forEach(plataforma => {
+        const option = document.createElement("option");
+        option.value = plataforma;
+        option.textContent = plataforma;
+        plataformaSelect.appendChild(option);
+      });
+      plataformaSelect.disabled = false;
+    } else {
+      plataformaSelect.disabled = true;
+    }
+  });
+
+  // Ao mudar Código da Planta → atualiza Cisco
+  codigoSelect.addEventListener("change", function() {
+    const plantaSelecionada = plantaSelect.value;
+    const codigoSelecionado = this.value;
+    if (plantaSelecionada && codigoSelecionado) {
+      ciscoInput.value = plantas[plantaSelecionada].codigos[codigoSelecionado];
+    } else {
+      ciscoInput.value = "";
+    }
+  });
+
+  // Ao mudar Plataforma → atualiza Carros
+  plataformaSelect.addEventListener("change", function() {
+    const plantaSelecionada = plantaSelect.value;
+    const plataformaSelecionada = this.value;
+    carlineSelect.innerHTML = '<option value="">Selecione o Carro</option>';
+    if (plantaSelecionada && plataformaSelecionada) {
+      plantas[plantaSelecionada].plataformas[plataformaSelecionada].forEach(carro => {
+        const option = document.createElement("option");
+        option.value = carro;
+        option.textContent = carro;
+        carlineSelect.appendChild(option);
+      });
+      carlineSelect.disabled = false;
+    } else {
+      carlineSelect.disabled = true;
+    }
+  });
+</script>
+
+
+<script>
+// Seleciona o campo "Aplicável"
+const aplicavelSelect = document.getElementById('aplicavel');
+
+// Seleciona todos os campos do mesmo bloco, exceto o "Aplicável"
+const materiaisCampos = Array.from(aplicavelSelect.closest('fieldset').querySelectorAll('div'))
+  .filter(div => !div.contains(aplicavelSelect));
+
+// Função que esconde ou mostra os campos
+function atualizarMateriais() {
+  if (aplicavelSelect.value === "Não Aplicável") {
+    materiaisCampos.forEach(div => div.style.display = 'none');
+  } else {
+    materiaisCampos.forEach(div => div.style.display = 'block');
+  }
+}
+
+// Executa a função no load
+atualizarMateriais();
+
+// Adiciona evento de mudança
+aplicavelSelect.addEventListener('change', atualizarMateriais);
+</script>
+
+<!-- Script para adicionar/remover insumos do bloco 5 -->
+<script>
+  const containerInsumos = document.getElementById('container-insumos');
+  const btnAdicionar = document.getElementById('adicionar-linha');
+
+  btnAdicionar.addEventListener('click', () => {
+    const primeiraLinha = containerInsumos.querySelector('.insumo-linha');
+    const novaLinha = primeiraLinha.cloneNode(true);
+
+    // Limpa valores
+    novaLinha.querySelectorAll('input, select').forEach(el => {
+      if(el.type === 'file') el.value = '';
+      else el.value = '';
+    });
+
+    // Esconde preview da nova linha
+    const imgPreview = novaLinha.querySelector('.preview-imagem');
+    if(imgPreview) imgPreview.style.display = 'none';
+
+    containerInsumos.appendChild(novaLinha);
+  });
+
+  containerInsumos.addEventListener('click', (e) => {
+    if(e.target.classList.contains('remover-linha')) {
+      const linhas = containerInsumos.querySelectorAll('.insumo-linha');
+      if(linhas.length > 1) {
+        e.target.closest('.insumo-linha').remove();
+      }
+    }
+  });
+
+  // Preview das imagens dos insumos
+  containerInsumos.addEventListener('change', (e) => {
+    if(e.target.classList.contains('input-imagem')) {
+      const file = e.target.files[0];
+      const preview = e.target.parentElement.querySelector('.preview-imagem');
+      if(file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
     }
   });
 </script>

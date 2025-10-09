@@ -4,145 +4,183 @@
 
 {% block content %}
 
-  <style>
-    /* Botão cadastrar no topo */
-    .topo-container {
-      display: flex;
-      justify-content: flex-start;
-      margin-bottom: 15px;
-      align-items: center;
-      gap: 20px; /* espaço entre o título e o botão */
-    }
-    .btn-cadastrar {
-      background-color: #2980b9;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-    }
-    .btn-cadastrar:hover {
-      background-color: #1f6391;
-      color: white;
-    }
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    /* Seus estilos existentes */
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
-      padding: 0px;
-    }
-    table#minhaTabela {
-      border-collapse: separate;
-      border-spacing: 0 8px;
-      width: 100%;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    thead tr:first-child th {
-      background-color: #2c3e50;
-      color: white;
-      font-weight: 600;
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 2px solid #34495e;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    thead tr:nth-child(2) th {
-      background-color: #000000;
-      padding: 8px 10px;
-    }
-    thead input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #000000;
-      border-radius: 5px;
-      font-size: 0.9em;
-      transition: border-color 0.3s ease;
-    }
-    thead input:focus {
-      outline: none;
-      border-color: #2980b9;
-      box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
-    }
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000000;
+    padding: 0px;
+  }
+
+  .topo-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Botões uniformes */
+  .btn-cadastrar, .btn-responder {
+    display: inline-block;
+    background-color: #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  .btn-cadastrar:hover, .btn-responder:hover {
+    background-color: #1f6391;
+  }
+
+  /* Tabela principal */
+  table#minhaTabela {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  thead tr:first-child th {
+    background-color: #34495e;
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 15px;
+    text-align: left;
+    border-bottom: 2px solid #2c3e50;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  thead tr:nth-child(2) th {
+    background-color: #ecf0f1;
+    padding: 6px 10px;
+  }
+
+  thead input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transition: all 0.3s;
+  }
+
+  thead input:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+  }
+
+  tbody tr {
+    background-color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border-radius: 6px;
+  }
+
+  tbody tr:hover { 
+    background-color: #f0f8ff;
+    transform: translateY(-1px);
+  }
+
+  tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    color: #2c3e50;
+  }
+
+  /* Colunas centralizadas */
+  td[data-label="Aprovação"], td[data-label="Responder"], td[data-label="PDF"], td[data-label="Editar"] {
+    text-align: center;
+    font-size: 1.1em;
+  }
+
+  /* Status colorido */
+  .status-bar {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1em;
+    text-align: center;
+  }
+  .aprovado { background-color: #27ae60; }
+  .reprovado { background-color: #c0392b; }
+  .aguardando { background-color: #f39c12; }
+
+  /* Botões da tabela */
+  td a.btn-edit, td a.btn-pdf, td a.btn-responder {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9em;
+    color: #fff;
+    transition: all 0.3s;
+  }
+  td a.btn-edit { background-color: #27ae60; }
+  td a.btn-edit:hover { background-color: #1f7a3a; }
+  td a.btn-pdf { background-color: #8e44ad; }
+  td a.btn-pdf:hover { background-color: #71368a; }
+  td a.btn-responder { background-color: #27ae60; } /* verde */
+  td a.btn-responder:hover { background-color: #1f7a3a; }
+
+  /* Paginação DataTables */
+  .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background-color: #2980b9;
+    border: none;
+    color: rgb(0,0,0) !important;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin: 0 3px;
+    cursor: pointer;
+  }
+  .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+  .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #1f6391;
+    color: rgb(0,0,0) !important;
+  }
+
+  @media (max-width: 768px) {
+    table#minhaTabela, thead, tbody, th, td, tr { display: block; }
+    thead tr:first-child, thead tr:nth-child(2) { display: none; }
     tbody tr {
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: background-color 0.3s ease;
-      cursor: default;
-    }
-    tbody tr:hover {
-      background-color: #d6eaff;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      background: #2c3e50;
+      padding: 12px;
+      border-radius: 10px;
     }
     tbody td {
-      padding: 12px 15px;
-      border-bottom: none;
-      vertical-align: middle;
-      color: #333;
+      padding: 8px 10px;
+      text-align: right;
+      position: relative;
+      color: #fff;
     }
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-      background-color: #2980b9;
-      border: none;
-      color: rgb(0, 0, 0) !important;
-      border-radius: 4px;
-      padding: 6px 12px;
-      margin: 0 3px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+    tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      width: 50%;
+      font-weight: 600;
+      text-align: left;
+      color: #ecf0f1;
     }
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-      background-color: #1f6391;
-      color: rgb(0, 0, 0) !important;
-    }
-    .dataTables_wrapper .dataTables_length select,
-    .dataTables_wrapper .dataTables_filter input {
-      border-radius: 5px;
-      border: 1px solid #000000;
-      padding: 5px 8px;
-      font-size: 0.9em;
-      margin-left: 5px;
-    }
-    @media (max-width: 768px) {
-      table#minhaTabela, thead, tbody, th, td, tr {
-        display: block;
-      }
-      thead tr:first-child {
-        display: none;
-      }
-      thead tr:nth-child(2) th {
-        display: none;
-      }
-      tbody tr {
-        margin-bottom: 15px;
-        box-shadow: none;
-        background: #000000;
-        padding: 10px;
-        border-radius: 8px;
-      }
-      tbody td {
-        padding: 8px 10px;
-        text-align: right;
-        position: relative;
-      }
-      tbody td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 10px;
-        width: 50%;
-        font-weight: 600;
-        text-align: left;
-        color: #555;
-      }
-    }
-  </style>
+  }
+</style>
+
 
   <h1>Fornecedores</h1>
 
@@ -187,7 +225,7 @@
       <td data-label="E-mail">{{ fornecedor.emailforn }}</td>
       <td data-label="Token">{{ fornecedor.token }}</td>
       <td data-label="Editar">
-        <a href="{{ url_for('editar_fornecedor', registro_id=fornecedor.id) }}">Editar</a>
+        <a href="{{ url_for('editar_fornecedor', registro_id=fornecedor.id) }}" class="btn-edit">Editar</a>
       </td>
     </tr>
     {% else %}

@@ -1,11 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}Solicitações{% endblock %}
+{% block title %}Embalagens{% endblock %}
 
 {% block content %}
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
 
 <style>
   body {
@@ -40,16 +37,15 @@
   }
 
   /* Tabela principal */
-table#tabelaSolicitacoes {
-  border-collapse: separate;
-  border-spacing: 0 12px;
-  width: 100%;
-  background: #fff; /* fundo branco */
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
+  table#minhaTabela {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
 
   thead tr:first-child th {
     background-color: #34495e;
@@ -184,81 +180,95 @@ table#tabelaSolicitacoes {
 </style>
 
 
-  <h1>Solicitações em Aberto</h1>
 
-  <div class="topo-container">
-    <a href="{{ url_for('solicitar') }}" class="btn-cadastrar">Solicitar PPI</a>
-  </div>
+<h1>Embalagens</h1>
 
-  <!-- CSS DataTables -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+<div class="topo-container">
+  <a href="{{ url_for('cadastrar_embalagem') }}" class="btn-cadastrar">Cadastrar Embalagem</a>
+</div>
 
-  <table id="tabelaSolicitacoes" class="display" style="width:100%">
-    <thead>
-      <tr>
-        <th>Planta</th>
-        <th>PN</th>
-        <th>Descrição</th>
-        <th>DUNS</th>
-        <th>Fornecedor</th>
-        <th>E-mail</th>
-        <th>Ação</th>
-      </tr>
-      <tr>
-        <th><input type="text" placeholder="Filtrar Planta" /></th>
-        <th><input type="text" placeholder="Filtrar PN" /></th>
-        <th><input type="text" placeholder="Filtrar Descrição" /></th>
-        <th><input type="text" placeholder="Filtrar DUNS" /></th>
-        <th><input type="text" placeholder="Filtrar Fornecedor" /></th>
-        <th><input type="text" placeholder="Filtrar E-mail" /></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for registro in registros %}
-      <tr>
-        <td data-label="Planta">{{ registro.planta }}</td>
-        <td data-label="PN">{{ registro.pn }}</td>
-        <td data-label="Descrição">{{ registro.descricao }}</td>
-        <td data-label="DUNS">{{ registro.duns }}</td>
-        <td data-label="Fornecedor">{{ registro.fornecedor }}</td>
-        <td data-label="E-mail">{{ registro.email }}</td>
-        <td data-label="Ação">
-          <a href="{{ url_for('reenviar_solicitacao', solicitacao_id=registro['solicitacao_id']) }}" class="btn-responder">Reenviar</a>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
-        </td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="7" style="text-align:center;">Nenhuma solicitação em aberto.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<table id="minhaTabela" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Tipo</th>
+      <th>Material</th>
+      <th>Tamanho</th>
+      <th>Comp. Ext.(mm)</th>
+      <th>Larg. Ext.(mm)</th>
+      <th>Alt. Ext.(mm)</th>
+      <th>Comp. Int.(mm)</th>
+      <th>Larg. Int.(mm)</th>
+      <th>Alt. Int.(mm)</th>
+      <th>Tara(kg)</th>
+      <th>Data Cadastro</th>
+      <th>Editar</th>
+    </tr>
+    <tr>
+      <th><input type="text" placeholder="Filtrar Código" /></th>
+      <th><input type="text" placeholder="Filtrar Tipo" /></th>
+      <th><input type="text" placeholder="Filtrar Material" /></th>
+      <th><input type="text" placeholder="Filtrar Tamanho" /></th>
+      <th><input type="text" placeholder="Filtrar Comp. Ext." /></th>
+      <th><input type="text" placeholder="Filtrar Larg. Ext." /></th>
+      <th><input type="text" placeholder="Filtrar Alt. Ext." /></th>
+      <th><input type="text" placeholder="Filtrar Comp. Int." /></th>
+      <th><input type="text" placeholder="Filtrar Larg. Int." /></th>
+      <th><input type="text" placeholder="Filtrar Alt. Int." /></th>
+      <th><input type="text" placeholder="Filtrar Tara" /></th>
+      <th><input type="text" placeholder="Filtrar Data" /></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for emb in embalagens %}
+    <tr>
+      <td data-label="Código">{{ emb.codigo }}</td>
+      <td data-label="Tipo">{{ emb.tipo }}</td>
+      <td data-label="Material">{{ emb.material }}</td>
+      <td data-label="Material">{{ emb.size }}</td>
+      <td data-label="Comp. Ext.">{{ emb.comprimento_ext }}</td>
+      <td data-label="Larg. Ext.">{{ emb.largura_ext }}</td>
+      <td data-label="Alt. Ext.">{{ emb.altura_ext }}</td>
+      <td data-label="Comp. Int.">{{ emb.comprimento_int }}</td>
+      <td data-label="Larg. Int.">{{ emb.largura_int }}</td>
+      <td data-label="Alt. Int.">{{ emb.altura_int }}</td>
+      <td data-label="Tara">{{ emb.tara }}</td>
+      <td data-label="Data Cadastro">{{ emb.data_cadastro }}</td>
+      <td data-label="Editar">
+        <a href="{{ url_for('editar_embalagem', registro_id=emb.id) }}" class="btn-edit">Editar</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="13" style="text-align:center;">Nenhuma embalagem cadastrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-  <!-- DataTables JS -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script>
-    $(document).ready(function() {
-      var table = $('#tabelaSolicitacoes').DataTable({
-        language: {
-          url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/Portuguese-Brasil.json"
-        },
-        pageLength: 25,
-        lengthMenu: [10, 25, 50, 100],
-        order: [[0, "asc"]],
-        fixedHeader: true
-      });
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-      // Filtros por coluna
-      $('#tabelaSolicitacoes thead tr:eq(1) th').each(function(i) {
-        $('input', this).on('keyup change clear', function() {
-          if (table.column(i).search() !== this.value) {
-            table.column(i).search(this.value).draw();
-          }
-        });
-      });
+<script>
+$(document).ready(function() {
+  var table = $('#minhaTabela').DataTable({
+    language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/Portuguese-Brasil.json" },
+    pageLength: 10,
+    lengthMenu: [5,10,25,50],
+    lengthChange: false,
+    order: [[0, "asc"]],
+    fixedHeader: true
+  });
+
+  $('#minhaTabela thead tr:eq(1) th').each(function(i) {
+    $('input', this).on('keyup change clear', function() {
+      if (table.column(i).search() !== this.value) {
+        table.column(i).search(this.value).draw();
+      }
     });
-  </script>
+  });
+});
+</script>
+
 {% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Embalagem{% endblock %}
+
+{% block content %}
+<div class="container centered">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logo" />
+  <h1>Editar Embalagem</h1>
+
+  <form action="{{ url_for('editar_embalagem', registro_id=embalagem.id) }}" method="post">
+    <fieldset>
+      <legend>Informações da Embalagem</legend>
+
+      <label for="codigo">Código:</label>
+      <input type="text" id="codigo" name="codigo" value="{{ embalagem.codigo }}" required />
+
+      <label for="tipo">Tipo:</label>
+      <input type="text" id="tipo" name="tipo" value="{{ embalagem.tipo }}" required />
+
+      <label for="material">Material:</label>
+      <input type="text" id="material" name="material" value="{{ embalagem.material }}" required />
+
+      <label for="material">Size:</label>
+      <input type="text" id="size" name="size" value="{{ embalagem.size }}" required />
+
+      <label for="comprimento_ext">Comprimento Externo: (mm)</label>
+      <input type="number" step="0.01" id="comprimento_ext" name="comprimento_ext" value="{{ embalagem.comprimento_ext }}" required />
+
+      <label for="largura_ext">Largura Externa: (mm)</label>
+      <input type="number" step="0.01" id="largura_ext" name="largura_ext" value="{{ embalagem.largura_ext }}" required />
+
+      <label for="altura_ext">Altura Externa: (mm)</label>
+      <input type="number" step="0.01" id="altura_ext" name="altura_ext" value="{{ embalagem.altura_ext }}" required />
+
+      <label for="comprimento_int">Comprimento Interno: (mm)</label>
+      <input type="number" step="0.01" id="comprimento_int" name="comprimento_int" value="{{ embalagem.comprimento_int }}" required />
+
+      <label for="largura_int">Largura Interna: (mm)</label>
+      <input type="number" step="0.01" id="largura_int" name="largura_int" value="{{ embalagem.largura_int }}" required />
+
+      <label for="altura_int">Altura Interna: (mm)</label>
+      <input type="number" step="0.01" id="altura_int" name="altura_int" value="{{ embalagem.altura_int }}" required />
+
+      <label for="tara">Tara:</label>
+      <input type="number" step="0.01" id="tara" name="tara" value="{{ embalagem.tara }}" required />
+
+      <label for="ativo">Ativo:</label>
+      <select id="ativo" name="ativo" required>
+        <option value="true" {% if embalagem.ativo %}selected{% endif %}>Sim</option>
+        <option value="false" {% if not embalagem.ativo %}selected{% endif %}>Não</option>
+      </select>
+
+    </fieldset>
+
+    <button type="submit" name="submitform">Salvar</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,15 +1,16 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 {% block title %}Solicitação de Cotação{% endblock %}
 
 {% block content %}
 <h1>Solicitar PPI</h1>
 
 <form method="POST" action="{{ url_for('solicitar') }}">
-  
   <table id="tabela-solicitacao" class="table">
     <thead>
       <tr>
-        <th>Planta</th>
+        <th>Código Planta</th>
+        <th class="oculto">Planta</th>
+        <th class="oculto">Cisco</th>
         <th>PN</th>
         <th>Descrição</th>
         <th>DUNS</th>
@@ -20,7 +21,9 @@
     </thead>
     <tbody>
       <tr>
-        <td><input name="planta[]" type="text" required></td>
+        <td><input name="codigo_planta[]" type="text" required></td>
+        <td class="oculto"><input name="planta[]" type="text" readonly></td>
+        <td class="oculto"><input name="cisco[]" type="text" readonly></td>
         <td><input name="pn[]" type="text" required></td>
         <td><input name="descricao[]" type="text" required></td>
         <td><input name="duns[]" type="text" required></td>
@@ -31,14 +34,80 @@
     </tbody>
   </table>
 
-  <!-- Campo oculto para os dados -->
   <input type="hidden" name="dados_excel" id="dados_excel">
 
   <button type="button" id="adicionar-linha">Adicionar Linha</button>
   <button type="submit">Enviar Solicitação</button>
 </form>
 
+<style>
+/* Esconde as colunas Planta e Cisco */
+.oculto { display: none; }
+</style>
+
 <script>
+
+// Atualiza Planta e Cisco ao digitar Código Planta
+document.querySelector("#tabela-solicitacao").addEventListener("input", function(e) {
+  const linha = e.target.closest("tr");
+
+  if(e.target.name === "codigo_planta[]") {
+    const codigo = e.target.value.trim();
+    let plantaVal = "";
+    let ciscoVal = "";
+    for(const p in plantas) {
+      if(plantas[p].codigos[codigo]) {
+        plantaVal = p;
+        ciscoVal = plantas[p].codigos[codigo];
+        break;
+      }
+    }
+    linha.querySelector("input[name='planta[]']").value = plantaVal;
+    linha.querySelector("input[name='cisco[]']").value = ciscoVal;
+  }
+
+  // Busca automática de fornecedor e email pelo DUNS
+  if(e.target.name === "duns[]") {
+    const duns = e.target.value.trim();
+    if(!duns) return;
+
+    fetch("/buscar_email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ duns: duns })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const emailInput = linha.querySelector("input[name='email[]']");
+      const fornecedorInput = linha.querySelector("input[name='fornecedor[]']");
+
+      if(data.email) {
+        emailInput.value = data.email;
+        emailInput.readOnly = true;
+      } else {
+        emailInput.value = "";
+        emailInput.readOnly = false;
+      }
+
+      if(data.nome) {
+        fornecedorInput.value = data.nome;
+        fornecedorInput.readOnly = true;
+      } else {
+        fornecedorInput.value = "";
+        fornecedorInput.readOnly = false;
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao buscar dados do fornecedor:", err);
+      linha.querySelector("input[name='email[]']").value = "";
+      linha.querySelector("input[name='email[]']").readOnly = false;
+      linha.querySelector("input[name='fornecedor[]']").value = "";
+      linha.querySelector("input[name='fornecedor[]']").readOnly = false;
+    });
+  }
+});
+
+// Adicionar nova linha
 document.getElementById('adicionar-linha').addEventListener('click', function () {
   const tabela = document.querySelector('#tabela-solicitacao tbody');
   const novaLinha = tabela.rows[0].cloneNode(true);
@@ -46,112 +115,32 @@ document.getElementById('adicionar-linha').addEventListener('click', function ()
   tabela.appendChild(novaLinha);
 });
 
-document.querySelector('#tabela-solicitacao').addEventListener('click', function (e) {
-  if (e.target.classList.contains('remover-linha')) {
+// Remover linha
+document.querySelector('#tabela-solicitacao').addEventListener('click', function(e) {
+  if(e.target.classList.contains('remover-linha')) {
     const linhas = document.querySelectorAll('#tabela-solicitacao tbody tr');
-    if (linhas.length > 1) e.target.closest('tr').remove();
+    if(linhas.length > 1) e.target.closest('tr').remove();
   }
 });
 
-// COLAGEM DIRETA DO EXCEL
-document.querySelector("#tabela-solicitacao").addEventListener("paste", function (e) {
-  e.preventDefault();
-
-  const clipboardData = e.clipboardData || window.clipboardData;
-  const texto = clipboardData.getData("text");
-
-  const linhas = texto.split("\n").filter(l => l.trim() !== "");
-
-  const tabela = document.querySelector("#tabela-solicitacao tbody");
-
-  linhas.forEach((linhaTexto, index) => {
-    const colunas = linhaTexto.split("\t");
-
-    // Adiciona linha se necessário
-    if (index > 0) {
-      const novaLinha = tabela.rows[0].cloneNode(true);
-      novaLinha.querySelectorAll("input").forEach(input => input.value = "");
-      tabela.appendChild(novaLinha);
-    }
-
-    const linhaAtual = tabela.rows[index];
-    const inputs = linhaAtual.querySelectorAll("input");
-
-    colunas.forEach((coluna, i) => {
-      if (inputs[i]) inputs[i].value = coluna.trim();
-    });
-
-    // Força a atualização do e-mail ao colar DUNS
-    const duns = linhaAtual.querySelector("input[name='duns[]']").value.trim();
-    if (duns) {
-      fetch("/buscar_email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ duns: duns })
-      })
-      .then(response => response.json())
-      .then(data => {
-        linhaAtual.querySelector("input[name='email[]']").value = data.email || "";
-      })
-      .catch(error => {
-        console.error("Erro ao buscar e-mail:", error);
-        linhaAtual.querySelector("input[name='email[]']").value = "";
-      });
-    }
-  });
-});
-
-// Ao submeter o formulário, montar o JSON com os dados da tabela
-document.querySelector("form").addEventListener("submit", function () {
+// Montar JSON com os dados corretos ao submeter
+document.querySelector("form").addEventListener("submit", function() {
   const linhas = [];
   const linhasTabela = document.querySelectorAll("#tabela-solicitacao tbody tr");
 
   linhasTabela.forEach(linha => {
-    const planta = linha.querySelector("input[name='planta[]']").value.trim();
+    const codigo_planta = linha.querySelector("input[name='codigo_planta[]']").value.trim();
     const pn = linha.querySelector("input[name='pn[]']").value.trim();
     const descricao = linha.querySelector("input[name='descricao[]']").value.trim();
     const duns = linha.querySelector("input[name='duns[]']").value.trim();
     const fornecedor = linha.querySelector("input[name='fornecedor[]']").value.trim();
     const email = linha.querySelector("input[name='email[]']").value.trim();
 
-    linhas.push([planta, pn, descricao, duns, fornecedor, email]);
+    // Apenas os 6 campos que o backend espera
+    linhas.push([codigo_planta, pn, descricao, duns, fornecedor, email]);
   });
 
   document.getElementById("dados_excel").value = JSON.stringify(linhas);
-});
-
-// Detecta alteração no campo DUNS e busca o e-mail correspondente
-document.querySelector("#tabela-solicitacao").addEventListener("input", function (e) {
-  if (e.target.name === "duns[]") {
-    const linha = e.target.closest("tr");
-    const duns = e.target.value.trim();
-
-    if (duns.length === 0) return;
-
-    fetch("/buscar_email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ duns: duns })
-    })
-    .then(response => response.json())
-    .then(data => {
-      const emailInput = linha.querySelector("input[name='email[]']");
-      if (data.email) {
-        emailInput.value = data.email;
-        emailInput.readOnly = true;  // bloqueia edição se achou email
-      } else {
-        emailInput.value = "";
-        emailInput.readOnly = false; // libera edição se não achou
-        emailInput.focus();           // opcional: foca no campo para facilitar edição
-      }
-    })
-    .catch(error => {
-      console.error("Erro ao buscar e-mail:", error);
-      const emailInput = linha.querySelector("input[name='email[]']");
-      emailInput.value = "";
-      emailInput.readOnly = false;
-    });
-  }
 });
 </script>
 {% endblock %}

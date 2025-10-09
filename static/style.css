@@ -48,8 +48,8 @@ h1 {
 
 /* Sidebar (menu lateral) */
 .sidebar {
-  width: 250px;
-  background-color: #1f1f1f;
+  width: 300px;
+  background-color: #000000;
   color: #ffffff;
   padding: 25px 20px;
   flex-shrink: 0;
@@ -135,7 +135,7 @@ h1 {
 
 /* Container centralizado só para o formulário */
 .container.centered {
-  max-width: 700px;
+  max-width: 95%;
   margin: 40px auto;
   text-align: center;
 }
@@ -160,6 +160,23 @@ h1 {
   color: rgb(30, 14, 245); /* Texto vermelho escuro para contraste */
 }
 
+.linha-flex {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.coluna-flex {
+  flex: 1;
+  min-width: 120px;
+}
+
+.preview-imagem {
+  max-width: 100px;
+  display: block;
+  margin-top: 5px;
+}
 
 
 /* Logo */
@@ -170,7 +187,7 @@ h1 {
   filter: brightness(0) invert(1);
 }
 
-/* Formatação dos formulários */
+/* Formatação dos formulários com glassmorphism */
 form label {
   display: block;
   margin-bottom: 6px;
@@ -180,46 +197,93 @@ form label {
   text-align: left;
 }
 
+/* Inputs e selects padronizados */
 form input[type="text"],
 form input[type="email"],
 form input[type="tel"],
 form input[type="file"],
+form input[type="number"],
 form select {
   width: 100%;
-  padding: 10px 14px;
-  margin-top: 6px;
-  border: 1.5px solid #333;
+  padding: 10px 14px;   /* mesmo padding dos inputs */
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   font-size: 1rem;
-  background-color: #222;
+  line-height: 1.4;      /* garante altura consistente */
+  
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
   color: #ffffff;
   transition: border-color 0.3s, background-color 0.3s;
   text-align: left;
+  height: 44px;           /* força altura igual para inputs e selects */
+  appearance: none;       /* remove estilo nativo do select */
 }
 
+/* Foco */
 form input[type="text"]:focus,
 form input[type="email"]:focus,
 form input[type="tel"]:focus,
 form input[type="file"]:focus,
+form input[type="number"]:focus,
 form select:focus {
-  border-color: #555;
+  border-color: rgba(255, 255, 255, 0.6);
   outline: none;
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #000000;
 }
 
+/* Adicionar seta customizada para select (opcional) */
+form select {
+  background-image: url("data:image/svg+xml,%3Csvg fill='white' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  padding-right: 36px; /* espaço para a seta */
+}
+
+
 form fieldset {
-  border: 1.5px solid #333;
+  border: 1.5px solid rgba(255, 255, 255, 0.3); /* borda suave */
   padding: 20px 28px 28px 28px;
   margin-bottom: 30px;
   border-radius: 10px;
-  background-color: #1e1e1e;
+  background: rgba(30, 30, 30, 0.2); /* fundo semi-transparente */
+  backdrop-filter: blur(30px);       /* efeito blur */
+  -webkit-backdrop-filter: blur(10px); /* suporte Safari */
   text-align: left;
+  color: #fff; /* cor do texto */
+}
+
+/* Legenda do fieldset */
+form fieldset legend {
+  font-weight: bold;
+  padding: 0 10px;
+  color: #fff;
+}
+
+/* Inputs e selects dentro do fieldset */
+form fieldset input,
+form fieldset select {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+/* Placeholder mais claro */
+form fieldset input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 form legend {
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   padding: 0 8px;
   color: #ffffff;
 }
@@ -421,6 +485,18 @@ table tbody td {
   user-select: none;
 }
 
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  align-items: start;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
 .clear-btn:hover {
   background-color: #882222;
 }
@@ -550,17 +626,22 @@ tr:nth-child(even) {
 }
 
 .home-box {
-  background-color: #1e1e1e; /* tom escuro, parecido com seus fieldsets */
+  background-color: rgba(30, 30, 30, 0.5); /* fundo semi-transparente para efeito blur */
   border-radius: 12px;
   padding: 24px 28px;
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+
+  /* Glassmorphism */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
   color: #ddd;
 }
 
 .home-box h2, .home-box h3 {
   margin-top: 0;
-  color: #0051ff; /* verde suave para títulos */
+  color: #0051ff; /* cor dos títulos */
 }
 
 .home-box a {
@@ -572,20 +653,25 @@ tr:nth-child(even) {
 .home-box a:hover {
   text-decoration: underline;
 }
+
 .welcome-block {
-  background-color: #1f1f1f;
+  background-color: rgba(31, 31, 31, 0.5); /* fundo semi-transparente para blur */
   padding: 30px 40px;
   border-radius: 10px;
   max-width: 900px;
   margin: 0 auto 40px auto;
   box-shadow: 0 0 10px rgba(0,0,0,0.7);
+
+  /* Glassmorphism */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .welcome-text h1 {
   font-size: 3rem;
   font-weight: 800;
   color: #0051ff;
-  margin: 0 0 50px 0;  /* aumentei de 20px para 40px */
+  margin: 0 0 50px 0;
   text-align: center;
 }
 
@@ -594,8 +680,9 @@ tr:nth-child(even) {
   align-items: center;
   gap: 24px;
   justify-content: center;
-  margin-bottom: 60px; /* aumentei de 20px para 40px */
+  margin-bottom: 60px;
 }
+
 
 
 .welcome-logo {
@@ -628,7 +715,7 @@ tr:nth-child(even) {
 }
 form div label {
   display: block;
-  margin-bottom: -4px; /* diminui o espaço entre label e input */
+  margin-bottom: 4px; /* diminui o espaço entre label e input */
   font-weight: 600; /* opcional, deixa a label mais destacada */
 }
 
@@ -659,4 +746,89 @@ form div input {
   .pms-vertical span:not(:last-child) {
     margin-right: 8px;
   }
+   /* Linha do insumo */
+  .insumo-linha {
+    display: flex;
+    flex-wrap: nowrap; /* mantém todos na mesma linha */
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .insumo-linha select,
+  .insumo-linha input[type="number"],
+  .insumo-linha input[type="file"] {
+    flex: 1 1 120px; /* ocupa proporcionalmente o espaço */
+    min-width: 80px;
+  }
+
+  .insumo-linha .preview-imagem {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    display: none;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+
+  .insumo-linha .remover-linha {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  .insumo-linha .remover-linha:hover {
+    background-color: #a71d2a;
+  }
+
+  /* Botão adicionar */
+  #adicionar-linha {
+    display: block;
+    margin-top: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  #adicionar-linha:hover {
+    background-color: #0056b3;
+  }
+}
+/* Seletor de registros ("Mostrar X entradas") */
+.dataTables_length {
+  margin-bottom: 15px; /* espaço entre seletor e tabela */
+}
+
+.dataTables_length select {
+  background-color: #ffffff; /* fundo preto */
+  color: #fff; /* texto branco */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.dataTables_length select option {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Filtro de busca */
+.dataTables_filter {
+  margin-bottom: 15px;
+}
+
+.dataTables_filter input {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
 }

@@ -7,278 +7,241 @@
 
   <!-- CSS DataTables -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
   <style>
-    /* Estilo base para a tabela */
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #ffffff;
-      padding: 0px;
-    }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000000;
+    padding: 0px;
+  }
 
-    table#minhaTabela {
-      border-collapse: separate;
-      border-spacing: 0 8px;
-      width: 100%;
-      background: #ffffff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-    }
+  table#minhaTabela {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
 
-    /* Cabeçalho */
-    thead tr:first-child th {
-      background-color: #2c3e50;
-      color: white;
-      font-weight: 600;
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 2px solid #34495e;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
+  thead tr:first-child th {
+    background-color: #34495e;
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 15px;
+    text-align: left;
+    border-bottom: 2px solid #2c3e50;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 
-    /* Inputs de filtro na segunda linha do thead */
-    thead tr:nth-child(2) th {
-      background-color: #000000;
-      padding: 8px 10px;
-    }
+  thead tr:nth-child(2) th {
+    background-color: #ecf0f1;
+    padding: 6px 10px;
+  }
 
-    thead input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #000000;
-      border-radius: 5px;
-      font-size: 0.9em;
-      transition: border-color 0.3s ease;
-    }
+  thead input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transition: all 0.3s;
+  }
 
-    thead input:focus {
-      outline: none;
-      border-color: #2980b9;
-      box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
-    }
+  thead input:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+  }
 
-    /* Linhas do corpo */
+  tbody tr {
+    background-color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border-radius: 6px;
+  }
+
+  tbody tr:hover { 
+    background-color: #f0f8ff;
+    transform: translateY(-1px);
+  }
+
+  tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    color: #2c3e50;
+  }
+
+  td[data-label="Aprovação Fornecedor"],
+  td[data-label="Aprovação Containers"],
+  td[data-label="PDF"],
+  td[data-label="Editar"] {
+    text-align: center;
+    font-size: 1.1em; /* tamanho maior */
+  }
+
+  /* Status com barras coloridas */
+  .status-bar {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1em;
+    text-align: center;
+  }
+  .aprovado { background-color: #27ae60; }
+  .reprovado { background-color: #c0392b; }
+  .aguardando { background-color: #f39c12; }
+
+  /* Botões PDF e Editar */
+  td a.btn-edit, td a.btn-pdf {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9em;
+    color: #fff;
+    transition: all 0.3s;
+  }
+  td a.btn-edit { background-color: #2980b9; }
+  td a.btn-edit:hover { background-color: #1f6391; }
+  td a.btn-pdf { background-color: #8e44ad; }
+  td a.btn-pdf:hover { background-color: #71368a; }
+
+  /* Estilo filtro de busca */
+  #minhaTabela_filter {
+    margin-bottom: 15px; /* espaço abaixo */
+  }
+  #minhaTabela_filter input {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+  }
+
+  @media (max-width: 768px) {
+    table#minhaTabela, thead, tbody, th, td, tr { display: block; }
+    thead tr:first-child, thead tr:nth-child(2) { display: none; }
     tbody tr {
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: background-color 0.3s ease;
-      cursor: default;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      background: #2c3e50;
+      padding: 12px;
+      border-radius: 10px;
     }
-
-    tbody tr:hover {
-      background-color: #d6eaff;
-    }
-
     tbody td {
-      padding: 12px 15px;
-      border-bottom: none;
-      vertical-align: middle;
-      color: #333;
+      padding: 8px 10px;
+      text-align: right;
+      position: relative;
+      color: #fff;
     }
-
-    /* Link no PDF */
-    tbody td a {
-      color: #2980b9;
-      text-decoration: none;
+    tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      width: 50%;
       font-weight: 600;
+      text-align: left;
+      color: #ecf0f1;
     }
+  }
+</style>
 
-    tbody td a:hover {
-      text-decoration: underline;
-    }
-
-    /* Paginação e filtro global do DataTables */
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-      background-color: #2980b9;
-      border: none;
-      color: rgb(0, 0, 0) !important;
-      border-radius: 4px;
-      padding: 6px 12px;
-      margin: 0 3px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-      background-color: #1f6391;
-      color: rgb(0, 0, 0) !important;
-    }
-
-    .dataTables_wrapper .dataTables_length select,
-    .dataTables_wrapper .dataTables_filter input {
-      border-radius: 5px;
-      border: 1px solid #000000;
-      padding: 5px 8px;
-      font-size: 0.9em;
-      margin-left: 5px;
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      table#minhaTabela, thead, tbody, th, td, tr {
-        display: block;
-      }
-
-      thead tr:first-child {
-        display: none;
-      }
-
-      thead tr:nth-child(2) th {
-        display: none;
-      }
-
-      tbody tr {
-        margin-bottom: 15px;
-        box-shadow: none;
-        background: #000000;
-        padding: 10px;
-        border-radius: 8px;
-      }
-
-      tbody td {
-        padding: 8px 10px;
-        text-align: right;
-        position: relative;
-      }
-
-      tbody td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 10px;
-        width: 50%;
-        font-weight: 600;
-        text-align: left;
-        color: #555;
-      }
-    }
-  </style>
 </head>
 <body>
 
 <table id="minhaTabela" class="display" style="width:100%">
   <thead>
     <tr>
+      <th>Código Planta</th>
       <th>PN</th>
-      <th>Descrição da Peça</th>
-      <th>Plataforma</th>
-      <th>Carro</th>
-      <th>Planta</th>
-      <th>Código da Planta</th>
-      <th>Fornecedor</th>
-      <th>Endereço</th>
-      <th>Cidade</th>
+      <th>Descrição</th>
       <th>DUNS</th>
-      <th>Responsável</th>
-      <th>E-mail do Responsável</th>
-      <th>Telefone (com DDD)</th>
-      <th>Representante do Fornecedor</th>
+      <th>Fornecedor</th>
+      <th>País</th>
       <th>Aprovação Fornecedor</th>
-      <th>Representante de Containers</th>
+      <th>Data do Envio</th>
       <th>Aprovação Containers</th>
+      <th>Data de Aprovação</th>
+      <th>Engenheiro de Embalagem</th>
       <th>PDF</th>
-      <th>Editar</th> <!-- Coluna nova -->
+      <th>Editar</th>
     </tr>
     <tr>
-      <!-- Filtros para cada coluna -->
-      <th><input type="text" placeholder="Filtrar PN" /></th>
-      <th><input type="text" placeholder="Filtrar Descrição" /></th>
-      <th><input type="text" placeholder="Filtrar Plataforma" /></th>
-      <th><input type="text" placeholder="Filtrar Carro" /></th>
-      <th><input type="text" placeholder="Filtrar Planta" /></th>
-      <th><input type="text" placeholder="Filtrar Código Planta" /></th>
-      <th><input type="text" placeholder="Filtrar Fornecedor" /></th>
-      <th><input type="text" placeholder="Filtrar Endereço" /></th>
-      <th><input type="text" placeholder="Filtrar Cidade" /></th>
-      <th><input type="text" placeholder="Filtrar DUNS" /></th>
-      <th><input type="text" placeholder="Filtrar Responsável" /></th>
-      <th><input type="text" placeholder="Filtrar E-mail" /></th>
-      <th><input type="text" placeholder="Filtrar Telefone" /></th>
-      <th><input type="text" placeholder="Filtrar Rep. Fornecedor" /></th>
-      <th><input type="text" placeholder="Filtrar Aprovação Forn." /></th>
-      <th><input type="text" placeholder="Filtrar Rep. Containers" /></th>
-      <th><input type="text" placeholder="Filtrar Aprovação Containers" /></th>
-      <th></th> <!-- filtro vazio para PDF -->
-      <th></th> <!-- filtro vazio para Editar -->
+      <th><input type="text" placeholder="Filtrar Código Planta"></th>
+      <th><input type="text" placeholder="Filtrar PN"></th>
+      <th><input type="text" placeholder="Filtrar Descrição"></th>
+      <th><input type="text" placeholder="Filtrar DUNS"></th>
+      <th><input type="text" placeholder="Filtrar Fornecedor"></th>
+      <th><input type="text" placeholder="Filtrar País"></th>
+      <th><input type="text" placeholder="Filtrar Aprovação Fornecedor"></th>
+      <th><input type="text" placeholder="Filtrar Data do Envio"></th>
+      <th><input type="text" placeholder="Filtrar Aprovação Containers"></th>
+      <th><input type="text" placeholder="Filtrar Data de Aprovação"></th>
+      <th><input type="text" placeholder="Filtrar Engenheiro de Embalagem"></th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     {% for registro in registros %}
     <tr>
+      <td data-label="Código Planta">{{ registro.codigo_planta }}</td>
       <td data-label="PN">{{ registro.pn }}</td>
-      <td data-label="Descrição da Peça">{{ registro.descricao }}</td>
-      <td data-label="Plataforma">{{ registro.plataforma }}</td>
-      <td data-label="Carro">{{ registro.carro }}</td>
-      <td data-label="Planta">{{ registro.planta }}</td>
-      <td data-label="Código da Planta">{{ registro.codigo }}</td>
-      <td data-label="Fornecedor">{{ registro.fornecedor }}</td>
-      <td data-label="Endereço">{{ registro.endereco }}</td>
-      <td data-label="Cidade">{{ registro.cidade }}</td>
+      <td data-label="Descrição">{{ registro.descricao }}</td>
       <td data-label="DUNS">{{ registro.duns }}</td>
-      <td data-label="Responsável">{{ registro.responsavel }}</td>
-      <td data-label="E-mail do Responsável">{{ registro.email }}</td>
-      <td data-label="Telefone (com DDD)">{{ registro.celular }}</td>
-      <td data-label="Representante do Fornecedor">{{ registro.rep_fornecedor }}</td>
-      <td data-label="Aprovação Fornecedor">{{ registro.aprov_fornecedor }}</td>
-      <td data-label="Representante de Containers">{{ registro.rep_containers }}</td>
-      <td data-label="Aprovação Containers"
-          class="{% if registro.aprov_containers == 'aprovado' %}aprovado
-                {% elif registro.aprov_containers == 'reprovado' %}reprovado
-                {% elif registro.aprov_containers == 'aguardando aprovacao' %}aguardando
-                {% endif %}">
-        {{ registro.aprov_containers }}
+      <td data-label="Fornecedor">{{ registro.fornecedor }}</td>
+      <td data-label="País">{{ registro.pais }}</td>
+      <td data-label="Aprovação Fornecedor">
+        <span class="status-bar {% if registro.aprov_fornecedor=='aprovado' %}aprovado{% elif registro.aprov_fornecedor=='reprovado' %}reprovado{% else %}aguardando{% endif %}">
+          {{ registro.aprov_fornecedor }}
+        </span>
       </td>
-
-      <td data-label="PDF">
-        <a href="{{ url_for('gerar_pdf', registro_id=registro.id) }}" target="_blank">Gerar PDF</a>
+      <td data-label="Data do Envio">{{ registro.data_aprov_fornecedor }}</td>
+      <td data-label="Aprovação Containers">
+        <span class="status-bar {% if registro.aprov_containers=='aprovado' %}aprovado{% elif registro.aprov_containers=='reprovado' %}reprovado{% else %}aguardando{% endif %}">
+          {{ registro.aprov_containers }}
+        </span>
       </td>
-      <td>
-        <a href="{{ url_for('editar_formulario', registro_id=registro.id) }}" class="btn-edit">Editar</a>
-      </td>
+      <td data-label="Data de Aprovação">{{ registro.data_aprov_containers }}</td>
+      <td data-label="Engenheiro de Embalagem">{{ registro.rep_containers }}</td>
+      <td data-label="PDF"><a href="{{ url_for('gerar_pdf', registro_id=registro.id) }}" target="_blank" class="btn-pdf">PDF</a></td>
+      <td data-label="Editar"><a href="{{ url_for('editar_formulario', registro_id=registro.id) }}" class="btn-edit">Editar</a></td>
     </tr>
     {% else %}
-    <tr><td colspan="19" style="text-align:center;">Nenhum registro encontrado.</td></tr>
+    <tr><td colspan="11" style="text-align:center;">Nenhum registro encontrado.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-<!-- JS DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
 <script>
 $(document).ready(function() {
   var table = $('#minhaTabela').DataTable({
-    language: {
-      url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/Portuguese-Brasil.json"
-    },
-    pageLength: 10,           // Define quantas linhas por página
-    lengthMenu: [5, 10, 25, 50, 100],
-    lengthChange: true,       // Permite o usuário alterar quantidade
-    info: true,               // Mostra info de registros (filtrados)
-    order: [[0, "asc"]],
-    columnDefs: [
-      { orderable: false, targets: [17, 18] } // PDF e Editar não ordenáveis
-    ],
+    language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/Portuguese-Brasil.json" },
+    pageLength: 10,
+    lengthMenu: [5,10,25,50,100],
+    lengthChange: true,
+    info: true,
+    order: [[0,"asc"]],
+    columnDefs: [ { orderable: false, targets: [9,10] } ],
     fixedHeader: true
   });
 
-  // Filtro por coluna usando inputs no thead segunda linha
   $('#minhaTabela thead tr:eq(1) th').each(function(i) {
     $('input', this).on('keyup change clear', function() {
-      if (table.column(i).search() !== this.value) {
-        table
-          .column(i)
-          .search(this.value)
-          .draw();
+      if(table.column(i).search() !== this.value) {
+        table.column(i).search(this.value).draw();
       }
     });
   });
 });
-
 </script>
+</body>
+</html>

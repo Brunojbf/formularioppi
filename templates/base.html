@@ -4,32 +4,84 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Meu App{% endblock %}</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
-  <!-- SweetAlert2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
-  
+
   <style>
-    /* Estilo para fixar o widget na parte inferior da sidebar */
+    body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; height: 100%; }
+    .app-container { display: flex; min-height: 100vh; }
     .sidebar {
-      position: relative;
+      width: 270px;
+      background-color: #07084e;
+      color: #fff;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      padding-bottom: 80px; /* espaço para o widget */
+      position: relative;
+      overflow-y: auto;
+      padding-bottom: 100px;
     }
+/* Cabeçalho da sidebar */
+.menu-header {
+  display: flex;
+  flex-direction: row;      /* logo e título na mesma linha */
+  align-items: center;      /* alinha verticalmente */
+  padding: 15px 10px;
+  border-bottom: 1px solid #374151;
+  gap: 10px;                /* espaço entre logo e título */
+}
 
+/* Logo */
+.menu-header img {
+  max-width: 75px;          /* ajuste conforme necessário */
+  height: auto;
+}
+
+/* Título do menu */
+.menu-header h2 {
+  margin: 0;
+  font-size: 1.2em;
+  color: #fff;
+  text-align: left;         /* garante alinhamento à esquerda */
+  text-transform: none;     /* remove o uppercase */
+  margin-bottom: 9px;
+}
+
+/* Título dos blocos de menu alinhado à esquerda */
+.menu-block-title {
+  font-size: 0.95em;
+  margin-bottom: 10px;
+  color: #ccc;
+  text-align: left;  /* força o alinhamento à esquerda */
+}
+
+    .menu-title { font-size: 1.2em; margin: 0; }
+    .menu-block { padding: 15px 15px; }
+    .menu-block-title { font-size: 0.95em; text-transform: uppercase; margin-bottom: 10px; color: #ccc; }
+    .menu-block ul { list-style: none; padding: 0; margin: 0; }
+    .menu-block li { margin-bottom: 8px; }
+    .menu-block li a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    .menu-block li a i { margin-right: 8px; }
+    .menu-block li a:hover,
+    .menu-block li.active a { background-color: #374151; }
     #google_translate_element {
       position: absolute;
       bottom: 20px;
-      left: 20px;
-      right: 20px;
+      left: 15px;
+      right: 15px;
       text-align: center;
-      z-index: 10;
       font-size: 14px;
     }
-
     #google_translate_element select {
       background: #333;
       color: #fff;
@@ -41,9 +93,19 @@
       width: 100%;
       max-width: 180px;
     }
-
-    #google_translate_element select:hover {
-      background: #555;
+    main.main-content {
+      flex: 1;
+      padding: 20px;
+      background-color: #f3f4f6;
+      overflow-x: auto;
+    }
+    .flash { padding: 10px 15px; margin-bottom: 10px; border-radius: 5px; }
+    .flash.success { background-color: #4ade80; color: #064e3b; }
+    .flash.danger { background-color: #f87171; color: #7f1d1d; }
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; }
+      .menu-block li a span { display: none; }
+      .menu-header h2 { display: none; }
     }
   </style>
 
@@ -63,90 +125,60 @@
     <nav class="sidebar" aria-label="Menu principal">
       <div class="menu-header">
         <a href="{{ url_for('home') }}">
-          <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" class="logosidebar" />
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da Empresa" />
         </a>
-        <h2 class="menu-title">PMS Menu</h2>
+        <h2 class="menu-title">Packaging Management System</h2>
       </div>
 
-      <!-- BLOCO 1 - FORNECEDOR (exibe só se usuário interno NÃO estiver logado) -->
+      <!-- BLOCO FORNECEDOR -->
       {% if not session.get('user') %}
-      <section class="menu-block-container" aria-labelledby="bloco1-title">
-        <div class="menu-block">
-          <h3 id="bloco1-title" class="menu-block-title">FORNECEDOR</h3>
-          <ul>
-            <li class="{% if request.endpoint == 'form' %}active{% endif %}">
-              <a href="{{ url_for('form') }}">Formulário PPI</a>
-            </li>
-
-            <li class="{% if request.endpoint == 'download' %}active{% endif %}">
-              <a href="{{ url_for('download') }}">Download Manuais</a>
-            </li>
-
-            {% if session.get('duns') and session.get('token') %}
-              <!-- Fornecedor logado -->
-              <li class="{% if request.endpoint == 'registrosforn' %}active{% endif %}">
-                <a href="{{ url_for('registrosforn') }}">Controle de Cadastro</a>
-              </li>
-              <li>
-                <a href="{{ url_for('logout_forn') }}" style="color: red;">Sair (Fornecedor)</a>
-              </li>
-            {% else %}
-              <!-- Fornecedor não logado -->
-              <li class="{% if request.endpoint == 'loginforn' %}active{% endif %}">
-                <a href="{{ url_for('loginforn') }}">Log In</a>
-              </li>
-            {% endif %}
-          </ul>
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- BLOCO 2 - USUÁRIO INTERNO (só aparece se fornecedor NÃO estiver logado) -->
-      {% if not (session.get('duns') and session.get('token')) %}
-      <section class="menu-block-container" aria-labelledby="bloco2-title">
-        <div class="menu-block">
-          <h3 id="bloco2-title" class="menu-block-title">GM</h3>
-
-          {% if not session.get('user') %}
-            <form id="login-form" method="POST" action="{{ url_for('login') }}">
-              <div>
-                <label for="usuario">Usuário:</label>
-                <input type="text" id="usuario" name="usuario" required autocomplete="username" class="input-field" />
-              </div>
-              <div>
-                <label for="senha">Senha:</label>
-                <input type="password" id="senha" name="senha" required autocomplete="current-password" class="input-field" />
-              </div>
-              <button type="submit" name="submituser">Enter</button>
-            </form>
-
-            {% if session.get('login_error') %}
-              <p class="error-msg" style="color:red;">{{ session.get('login_error') }}</p>
-            {% endif %}
+      <div class="menu-block">
+        <h3 class="menu-block-title">Fornecedor</h3>
+        <ul>
+          {% if session.get('duns') and session.get('token') %}
+            <li class="{% if request.endpoint == 'form' %}active{% endif %}"><a href="{{ url_for('form') }}"><i class="fas fa-file-alt"></i><span>Formulário PPI</span></a></li>
+            <li class="{% if request.endpoint == 'registrosforn' %}active{% endif %}"><a href="{{ url_for('registrosforn') }}"><i class="fas fa-list"></i><span>Controle de Cadastro</span></a></li>
+            <li class="{% if request.endpoint == 'download' %}active{% endif %}"><a href="{{ url_for('download') }}"><i class="fas fa-download"></i><span>Download Manuais</span></a></li>
+            <li><a href="{{ url_for('logout_forn') }}" style="color:red;"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
           {% else %}
-            <ul>
-              <li class="{% if request.endpoint == 'pendentes' %}active{% endif %}">
-                <a href="{{ url_for('pendentes') }}">Aprovações</a>
-              </li>
-              <li class="{% if request.endpoint == 'registros' %}active{% endif %}">
-                <a href="{{ url_for('registros') }}">Controle de Cadastros</a>
-              </li>
-              <li class="{% if request.endpoint == 'fornecedores' %}active{% endif %}">
-                <a href="{{ url_for('fornecedores') }}">Fornecedores</a>
-              </li>
-              <li class="{% if request.endpoint == 'solicitacoes_em_aberto' %}active{% endif %}">
-                <a href="{{ url_for('solicitacoes_em_aberto') }}">Solicitações</a>
-              </li>
-              <li>
-                <a href="{{ url_for('logout') }}" style="color: red;">Log Out ({{ session['user'] }})</a>
-              </li>
-            </ul>
+            <li class="{% if request.endpoint == 'loginforn' %}active{% endif %}"><a href="{{ url_for('loginforn') }}"><i class="fas fa-sign-in-alt"></i><span>Log In</span></a></li>
           {% endif %}
-        </div>
-      </section>
+        </ul>
+      </div>
       {% endif %}
 
-      <!-- Google Translate Widget -->
+      <!-- BLOCO USUÁRIO INTERNO -->
+      {% if not (session.get('duns') and session.get('token')) %}
+      <div class="menu-block">
+        <h3 class="menu-block-title">GM</h3>
+        {% if not session.get('user') %}
+          <form id="login-form" method="POST" action="{{ url_for('login') }}">
+            <div>
+              <label for="usuario">Usuário:</label>
+              <input type="text" id="usuario" name="usuario" required class="input-field" />
+            </div>
+            <div>
+              <label for="senha">Senha:</label>
+              <input type="password" id="senha" name="senha" required class="input-field" />
+            </div>
+            <button type="submit" name="submituser">Enter</button>
+          </form>
+          {% if session.get('login_error') %}
+            <p class="error-msg" style="color:red;">{{ session.get('login_error') }}</p>
+          {% endif %}
+        {% else %}
+          <ul>
+            <li class="{% if request.endpoint == 'pendentes' %}active{% endif %}"><a href="{{ url_for('pendentes') }}"><i class="fas fa-check-circle"></i><span>Aprovações</span></a></li>
+            <li class="{% if request.endpoint == 'registros' %}active{% endif %}"><a href="{{ url_for('registros') }}"><i class="fas fa-list"></i><span>Controle de Cadastros</span></a></li>
+            <li class="{% if request.endpoint == 'fornecedores' %}active{% endif %}"><a href="{{ url_for('fornecedores') }}"><i class="fas fa-truck"></i><span>Fornecedores</span></a></li>
+            <li class="{% if request.endpoint == 'embalagens' %}active{% endif %}"><a href="{{ url_for('embalagens') }}"><i class="fas fa-box"></i><span>Embalagens</span></a></li>
+            <li class="{% if request.endpoint == 'solicitacoes_em_aberto' %}active{% endif %}"><a href="{{ url_for('solicitacoes_em_aberto') }}"><i class="fas fa-clock"></i><span>Solicitações</span></a></li>
+            <li><a href="{{ url_for('logout') }}" style="color:red;"><i class="fas fa-sign-out-alt"></i><span>Log Out ({{ session['user'] }})</span></a></li>
+          </ul>
+        {% endif %}
+      </div>
+      {% endif %}
+
       <div id="google_translate_element"></div>
     </nav>
 
@@ -157,31 +189,17 @@
 
   <script type="text/javascript">
     function googleTranslateElementInit() {
-      new google.translate.TranslateElement(
-        {
-          pageLanguage: 'pt',
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-        },
-        'google_translate_element'
-      );
+      new google.translate.TranslateElement({ pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE }, 'google_translate_element');
     }
   </script>
-
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-  <!-- SweetAlert2 JS -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    // Flash messages fadeout
     document.addEventListener("DOMContentLoaded", function() {
       const flashMessages = document.querySelectorAll('.flash');
-
       flashMessages.forEach(function(msg) {
-        setTimeout(() => {
-          msg.style.opacity = '0'; // esmaece
-          setTimeout(() => msg.remove(), 500); // remove depois da transição
-        }, 40000); // 4 segundos
+        setTimeout(() => { msg.style.opacity = '0'; setTimeout(() => msg.remove(), 500); }, 4000);
       });
     });
   </script>
