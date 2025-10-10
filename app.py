@@ -39,7 +39,7 @@ app.secret_key = 'segredo'
 USUARIO_FIXO = "admin"
 SENHA_FIXA = "senha123"
 
-EMAIL_USER="grp-breng.containerization.gmb@gm.com"
+EMAIL_USER="brunojb_ferrari@hotmail.com"
 
 def gerar_token_5_chars():
     caracteres = string.ascii_letters + string.digits
@@ -382,7 +382,7 @@ def form():
         try:
             supabase.table("formulario_propostas").insert(data).execute()
 
-            email_recipients = ["grp-breng.containerization.gmb@gm.com"]
+            email_recipients = ["brunojb_ferrari@hotmail.com"]
             subject = "📋 New PPI Submitted - GMB"
             send_email_notificacao(email_recipients, subject, pn, fornecedor, planta, carline)
 
@@ -1033,7 +1033,7 @@ def editar_formulario_forn(registro_id):
             if response.data:
                 if aprov_containers == "aguardando aprovacao":
                     try:
-                        email_recipients = ["grp-breng.containerization.gmb@gm.com"]
+                        email_recipients = ["brunojb_ferrari@hotmail.com"]
                         subject = "📋 New PPI Submitted"
                         send_email_notificacao(email_recipients, subject, pn, fornecedor, planta, carline)
                         flash("Proposta enviada com sucesso!", "success")
@@ -1379,7 +1379,7 @@ def send_email_notificacao(email_recipients, subject, pn, fornecedor, codigo_pla
             email_recipients = [email_recipients]
 
         message = Mail(
-            from_email='grp-breng.containerization.gmb@gm.com',  # Seu e-mail verificado no SendGrid (ou autorizado)
+            from_email='brunojb_ferrari@hotmail.com',  # Seu e-mail verificado no SendGrid (ou autorizado)
             to_emails=email_recipients,
             subject=subject,
             html_content=html_body
@@ -1433,7 +1433,7 @@ def send_email_aprovacao(email_recipients, pn, fornecedor, aprov_containers):
 
         # Cria o objeto Mail do SendGrid
         message = Mail(
-            from_email='grp-breng.containerization.gmb@gm.com',  # seu e-mail autorizado no SendGrid
+            from_email='brunojb_ferrari@hotmail.com',  # seu e-mail autorizado no SendGrid
             to_emails=email_recipients,
             subject=f"{status_text} - PN {pn}",
             html_content=html_body
@@ -1716,7 +1716,7 @@ def send_email_solicitacao(email_recipients, linhas_solicitadas):
             """
 
             message = Mail(
-                from_email='grp-breng.containerization.gmb@gm.com',  # seu e-mail autorizado no SendGrid
+                from_email='brunojb_ferrari@hotmail.com',  # seu e-mail autorizado no SendGrid
                 to_emails=email,
                 subject="📋 Packaging Proposal Information (PPI) Request",
                 html_content=html_body
@@ -1813,7 +1813,7 @@ def send_email_mgo(destinatario, pn, fornecedor, planta, duns):
 
         # Cria o objeto Mail do SendGrid
         message = Mail(
-            from_email='grp-breng.containerization.gmb@gm.com',  # seu e-mail autorizado no SendGrid
+            from_email='brunojb_ferrari@hotmail.com',  # seu e-mail autorizado no SendGrid
             to_emails=destinatario,
             subject="📋 Solicitação de Atualização de Cadastro no MGO",
             html_content=html_body
